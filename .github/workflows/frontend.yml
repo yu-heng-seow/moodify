@@ -1,12 +1,9 @@
 name: Frontend CI/CD Pipeline
 
 on:
-  push:
-    paths:
-      - 'frontend/**' # Only trigger on changes to files in the 'frontend' directory
   pull_request:
-    paths:
-      - 'frontend/**' # Only trigger for PRs affecting the frontend
+    branches: [ main ]
+    types: [ opened, synchronize ]
 
 permissions:
   contents: write
