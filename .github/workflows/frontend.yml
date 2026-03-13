@@ -86,8 +86,6 @@ jobs:
           npm install
 
       - name: Create preview
-        uses: expo/expo-github-action/preview@v8
-        with:
-          command: |
-            cd frontend
-            eas update --auto
+        run: |
+          cd frontend
+          eas update --auto --json --non-interactive
