@@ -1,14 +1,41 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
-import { Image } from 'react-native';
+import { useAuth } from '@/context/auth';
+import { useEffect, useState } from 'react';
+import { getSignedUrl } from '@/lib/media';
+import { Avatar } from '@/components/ui/Avatar';
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
     <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.45 }}>
       {emoji}
     </Text>
+  );
+}
+
+function ProfileTabIcon({ focused }: { focused: boolean }) {
+  const { profile } = useAuth();
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile?.avatarS3Key) {
+      getSignedUrl(profile.avatarS3Key, 3600).then(setAvatarUri);
+    }
+  }, [profile?.avatarS3Key]);
+
+  return (
+    <View style={{
+      width: focused ? 28 : 24,
+      height: focused ? 28 : 24,
+      borderRadius: 14,
+      borderWidth: focused ? 2 : 0,
+      borderColor: Colors.accent.lavender,
+      opacity: focused ? 1 : 0.55,
+    }}>
+      <Avatar size={focused ? 24 : 24} uri={avatarUri} />
+    </View>
   );
 }
 
@@ -35,6 +62,7 @@ export default function TabsLayout() {
       }}
     >
       
+      
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -50,13 +78,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="library"
-        options={{
-          title: 'Library',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🎶" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
         name="player"
         options={{
           title: 'Player',
@@ -67,7 +88,13 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: ({ focused }) => <ProfileTabIcon focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

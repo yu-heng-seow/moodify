@@ -200,7 +200,7 @@ export default function DashboardScreen() {
           <Avatar
             size={36}
             uri={avatarUrl}
-            onPress={() => router.push("/(app)/profile")}
+            onPress={() => router.push("/(app)/(tabs)/profile")}
           />
         </View>
 
