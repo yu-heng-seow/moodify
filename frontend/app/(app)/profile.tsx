@@ -2,7 +2,6 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,7 +20,6 @@ export default function ProfileScreen() {
   const [recentMoods, setRecentMoods] = useState<string[]>([]);
 
   useEffect(() => {
-    updateStreak();
     if (user) fetchJournalStats();
   }, []);
 
@@ -50,40 +48,47 @@ export default function ProfileScreen() {
       .limit(5);
     if (data) {
       const emojis = data.map((entry) => {
-        const emotion = Emotions.find((e) => e.id === entry.emotion);
+        const emotion = Emotions.find((e) => e.id.toLowerCase() === entry.emotion.toLowerCase());
         return emotion?.emoji ?? '🎵';
       });
       setRecentMoods(emojis);
     }
-  }
 
-  async function updateStreak() {
-    const today = new Date().toDateString();
-    const lastOpen = await AsyncStorage.getItem('moodify_last_open');
-    const currentStreak = parseInt(await AsyncStorage.getItem('moodify_streak') ?? '0');
+    // Streak: count consecutive days with entries (including today)
+    const { data: entries } = await supabase
+      .from('journal_entries')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (entries && entries.length > 0) {
+      const uniqueDays = [...new Set(
+        entries.map((e) => new Date(e.created_at).toDateString())
+      )];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const firstDay = new Date(uniqueDays[0]);
+      firstDay.setHours(0, 0, 0, 0);
 
-    if (!lastOpen) {
-      await AsyncStorage.setItem('moodify_last_open', today);
-      await AsyncStorage.setItem('moodify_streak', '1');
-      setStreak(1);
-      return;
-    }
-
-    const last = new Date(lastOpen);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      setStreak(currentStreak);
-    } else if (diffDays === 1) {
-      const newStreak = currentStreak + 1;
-      await AsyncStorage.setItem('moodify_streak', String(newStreak));
-      await AsyncStorage.setItem('moodify_last_open', today);
-      setStreak(newStreak);
-    } else {
-      await AsyncStorage.setItem('moodify_streak', '1');
-      await AsyncStorage.setItem('moodify_last_open', today);
-      setStreak(1);
+      // Streak only counts if the most recent entry is today or yesterday
+      const diffFromToday = Math.floor((today.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffFromToday > 1) {
+        setStreak(0);
+      } else {
+        let consecutive = 1;
+        for (let i = 1; i < uniqueDays.length; i++) {
+          const curr = new Date(uniqueDays[i - 1]);
+          const prev = new Date(uniqueDays[i]);
+          curr.setHours(0, 0, 0, 0);
+          prev.setHours(0, 0, 0, 0);
+          const diff = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+          if (diff === 1) {
+            consecutive++;
+          } else {
+            break;
+          }
+        }
+        setStreak(consecutive);
+      }
     }
   }
 
