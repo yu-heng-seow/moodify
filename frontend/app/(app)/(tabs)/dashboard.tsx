@@ -76,7 +76,7 @@ export default function DashboardScreen() {
     const track = getTrackById(recommendation.trackId);
     if (track) {
       router.push({
-        pathname: '/(tabs)/player',
+        pathname: '/(app)/(tabs)/player',
         params: { trackId: track.id },
       });
     }
@@ -91,7 +91,7 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>moodify</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/library')}>
+          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/library')}>
             <Text style={styles.headerIcon}>🎵</Text>
           </TouchableOpacity>
         </View>
@@ -176,7 +176,7 @@ export default function DashboardScreen() {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push('/(tabs)/library')}
+            onPress={() => router.push('/(app)/(tabs)/library')}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -191,7 +191,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push('/(tabs)/player')}
+            onPress={() => router.push('/(app)/(tabs)/player')}
             activeOpacity={0.8}
           >
             <LinearGradient

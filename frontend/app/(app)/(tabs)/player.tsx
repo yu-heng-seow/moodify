@@ -58,7 +58,7 @@ export default function PlayerScreen() {
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>🎵</Text>
           <Text style={styles.emptyText}>No track selected</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/library')}>
+          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/library')}>
             <Text style={styles.emptyLink}>Browse Library →</Text>
           </TouchableOpacity>
         </View>

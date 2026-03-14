@@ -39,7 +39,7 @@ export default function StepThree() {
 
     await AsyncStorage.setItem('moodify_onboarded', 'true');
     setLoading(false);
-    router.replace('/(tabs)/dashboard');
+    router.replace('/(app)/(tabs)/dashboard');
   }
 
   return (
