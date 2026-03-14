@@ -10,7 +10,8 @@ export default function AppLayout() {
       </Stack.Protected>
       <Stack.Protected guard={onboardingComplete}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="profile" />
+        <Stack.Screen name="calendar" />
+        <Stack.Screen name="journal/[date]" />
       </Stack.Protected>
     </Stack>
   );

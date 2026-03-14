@@ -206,7 +206,7 @@ Return ONLY a JSON array of track IDs that best match the user's query, ordered 
             key={track.id}
             style={styles.resultCard}
             activeOpacity={0.8}
-            onPress={() => router.push({ pathname: '/(tabs)/player', params: { trackId: track.id } })}
+            onPress={() => router.push({ pathname: '/(app)/(tabs)/player', params: { trackId: track.id } })}
           >
             <LinearGradient
               colors={track.coverGradient}

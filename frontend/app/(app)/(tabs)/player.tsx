@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -27,6 +28,7 @@ export default function PlayerScreen() {
   const { loadAndPlay, togglePlayPause, isPlaying, isLoading, position, duration, currentTrack } =
     useAudio();
 
+  const insets = useSafeAreaInsets();
   const [pulseAnim] = useState(new Animated.Value(1));
 
   const track = trackId ? getTrackById(trackId) : currentTrack ?? Tracks[0];
@@ -87,13 +89,13 @@ export default function PlayerScreen() {
         style={[styles.bgGlow, { backgroundColor: track.color }]}
       />
 
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Back button */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        {/* <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <BlurView intensity={15} tint="dark" style={styles.backBlur}>
             <Text style={styles.backIcon}>←</Text>
           </BlurView>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Cover art */}
         <View style={styles.coverContainer}>
@@ -185,8 +187,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Theme.spacing.xl,
-    paddingTop: 35,
-    paddingBottom: 48,
+    justifyContent: 'center',
   },
   backBtn: {
     alignSelf: 'flex-start',

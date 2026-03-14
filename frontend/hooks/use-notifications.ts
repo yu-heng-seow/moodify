@@ -62,6 +62,7 @@ export function useNotifications() {
   }
 
   async function scheduleDailyCheckIn(hour: number, minute: number) {
+    if (Platform.OS === 'web') return;
     // Cancel existing
     await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -82,6 +83,7 @@ export function useNotifications() {
   }
 
   async function sendImmediateNotification(title: string, body: string) {
+    if (Platform.OS === 'web') return;
     await Notifications.scheduleNotificationAsync({
       content: { title, body },
       trigger: null,
@@ -89,6 +91,7 @@ export function useNotifications() {
   }
 
   async function cancelAll() {
+    if (Platform.OS === 'web') return;
     await Notifications.cancelAllScheduledNotificationsAsync();
   }
 

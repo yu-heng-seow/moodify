@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StepIndicator } from '@/components/onboarding/StepIndicator';
@@ -111,21 +111,23 @@ export default function StepThree() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          {/* Notification toggle */}
-          <TouchableOpacity
-            onPress={() => setNotifEnabled(!notifEnabled)}
-            style={[styles.notifCard, notifEnabled && styles.notifCardOn]}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.notifEmoji}>🔔</Text>
-            <View style={styles.notifText}>
-              <Text style={styles.notifTitle}>Daily check-in reminder</Text>
-              <Text style={styles.notifSub}>A gentle nudge at 8 PM each evening</Text>
-            </View>
-            <View style={[styles.toggle, notifEnabled && styles.toggleOn]}>
-              <View style={[styles.toggleDot, notifEnabled && styles.toggleDotOn]} />
-            </View>
-          </TouchableOpacity>
+          {/* Notification toggle — native only */}
+          {Platform.OS !== 'web' && (
+            <TouchableOpacity
+              onPress={() => setNotifEnabled(!notifEnabled)}
+              style={[styles.notifCard, notifEnabled && styles.notifCardOn]}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.notifEmoji}>🔔</Text>
+              <View style={styles.notifText}>
+                <Text style={styles.notifTitle}>Daily check-in reminder</Text>
+                <Text style={styles.notifSub}>A gentle nudge at 8 PM each evening</Text>
+              </View>
+              <View style={[styles.toggle, notifEnabled && styles.toggleOn]}>
+                <View style={[styles.toggleDot, notifEnabled && styles.toggleDotOn]} />
+              </View>
+            </TouchableOpacity>
+          )}
         </ScrollView>
 
         <View style={styles.footer}>

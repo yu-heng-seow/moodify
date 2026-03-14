@@ -31,18 +31,19 @@ export default function LibraryScreen() {
 
   return (
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Library</Text>
-        <Text style={styles.subtitle}>{Tracks.length} healing soundscapes</Text>
-      </View>
+      <View style={styles.topSection}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Library</Text>
+          <Text style={styles.subtitle}>{Tracks.length} healing soundscapes</Text>
+        </View>
 
-      {/* Emotion filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-        style={styles.filterScroll}
-      >
+        {/* Emotion filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+          style={styles.filterScroll}
+        >
         <TouchableOpacity
           onPress={() => setActiveFilter('all')}
           style={[styles.filterChip, activeFilter === 'all' && styles.filterChipActive]}
@@ -79,7 +80,8 @@ export default function LibraryScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {/* Track list */}
       <ScrollView
@@ -103,6 +105,9 @@ export default function LibraryScreen() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
+  topSection: {
+    flexShrink: 0,
+  },
   header: {
     paddingHorizontal: Theme.spacing.lg,
     paddingTop: 60,

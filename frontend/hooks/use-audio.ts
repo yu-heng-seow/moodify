@@ -58,7 +58,7 @@ export function useAudio() {
 
       audio.addEventListener('playing', () => setIsPlaying(true));
       audio.addEventListener('pause', () => setIsPlaying(false));
-      audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.loop = true;
 
       audio.addEventListener('error', (e) => {
         console.error('Web audio error:', e);
@@ -95,6 +95,7 @@ export function useAudio() {
         { uri: track.audioUrl },
         {
           shouldPlay: true,
+          isLooping: true,
           progressUpdateIntervalMillis: 1000,
         },
         (status) => {

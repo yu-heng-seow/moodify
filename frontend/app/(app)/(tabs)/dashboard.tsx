@@ -41,6 +41,7 @@ export default function DashboardScreen() {
   const [loadingRec, setLoadingRec] = useState(false);
   const [audioPref, setAudioPref] = useState("ambient");
   const [note, setNote] = useState("");
+  const [isTooLong, setIsTooLong] = useState(false);
   const [aiReply, setAiReply] = useState("");
   const [loadingReply, setLoadingReply] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -123,42 +124,43 @@ export default function DashboardScreen() {
     [name, audioPref],
   );
 
-  async function handleNoteSubmit() {
-    if (!note.trim() || !selectedEmotion) return;
-    setLoadingReply(true);
-    setAiReply("");
+//   async function handleNoteSubmit() {
+//     if (!note.trim() || !selectedEmotion) return;
+//     setLoadingReply(true);
+//     setAiReply("");
 
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [
-            {
-              role: "user",
-              content: `You are a warm, empathetic companion in a healing audio app. 
-The user is feeling "${selectedEmotion.label}" and shared this note: "${note}"
-Respond with a short, genuinely supportive message (2-3 sentences max). 
-Be human, warm, and grounding. Do not suggest professional help. No lists, no headers.`,
-            },
-          ],
-        }),
-      });
-      const data = await response.json();
-      const text = data.content?.[0]?.text ?? "";
-      setAiReply(text);
-    } catch {
-      setAiReply(
-        "I hear you. Whatever you're carrying right now, you don't have to carry it alone.",
-      );
-    } finally {
-      setLoadingReply(false);
-    }
-  }
+//     try {
+//       const response = await fetch("https://api.anthropic.com/v1/messages", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           model: "claude-sonnet-4-20250514",
+//           max_tokens: 1000,
+//           messages: [
+//             {
+//               role: "user",
+//               content: `You are a warm, empathetic companion in a healing audio app. 
+// The user is feeling "${selectedEmotion.label}" and shared this note: "${note}"
+// Respond with a short, genuinely supportive message (2-3 sentences max). 
+// Be human, warm, and grounding. Do not suggest professional help. No lists, no headers.`,
+//             },
+//           ],
+//         }),
+//       });
+//       const data = await response.json();
+//       const text = data.content?.[0]?.text ?? "";
+//       setAiReply(text);
+//     } catch {
+//       setAiReply(
+//         "I hear you. Whatever you're carrying right now, you don't have to carry it alone.",
+//       );
+//     } finally {
+//       setLoadingReply(false);
+//     }
+//   }
 
   async function handleListenNow() {
+
     if (!recommendation || !selectedEmotion || !user) return;
     const track = getTrackById(recommendation.trackId);
     if (!track) return;
@@ -198,7 +200,7 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
           <Avatar
             size={36}
             uri={avatarUrl}
-            onPress={() => router.push("/(app)/profile")}
+            onPress={() => router.push("/(app)/(tabs)/profile")}
           />
         </View>
 
@@ -288,11 +290,14 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
                     placeholder="Tell me what's on your mind..."
                     placeholderTextColor={Colors.text.muted}
                     value={note}
-                    onChangeText={setNote}
+                    onChangeText={(text) => {
+                      setNote(text);
+                      setIsTooLong(text.split(" ").length > 50);
+                    }}
                     multiline
                     numberOfLines={3}
                   />
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     style={styles.noteBtn}
                     activeOpacity={0.85}
                     onPress={handleNoteSubmit}
@@ -301,7 +306,7 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
                     <Text style={styles.noteBtnText}>
                       {loadingReply ? "Thinking..." : "Share with me →"}
                     </Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </View>
 
                 {/* AI reply */}
@@ -319,8 +324,13 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
                     <Text style={styles.aiReplyText}>{aiReply}</Text>
                   </View>
                 ) : null}
-
+                {isTooLong && (
+                  <Text style={{ color: Colors.accent.red, fontSize: Theme.fontSize.xs }}>
+                    Note is too long. Please keep it under 50 words.
+                  </Text>
+                )}
                 <GradientButton
+                disabled={isTooLong}
                   label="Listen Now"
                   onPress={handleListenNow}
                   style={styles.recBtn}
@@ -467,7 +477,7 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fontFamily.body,
     fontSize: Theme.fontSize.md,
     lineHeight: 24,
-    marginBottom: Theme.spacing.lg,
+    marginBottom: Theme.spacing.sm,
   },
   noteSection: {
     marginBottom: Theme.spacing.md,
@@ -489,7 +499,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSize.sm,
     minHeight: 80,
     textAlignVertical: "top",
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   noteBtn: {
     alignSelf: "flex-end",

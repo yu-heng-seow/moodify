@@ -6,6 +6,7 @@ export const Colors = {
     elevated: '#1E2235',
   },
   accent: {
+    red: '#F87171',
     lavender: '#A78BFA',
     lavenderDim: '#7C3AED',
     sage: '#6EE7B7',

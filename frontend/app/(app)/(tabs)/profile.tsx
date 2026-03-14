@@ -126,11 +126,6 @@ export default function ProfileScreen() {
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Back button */}
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View>
@@ -151,14 +146,14 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
+          <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => router.push('/(app)/calendar')}>
             <Text style={styles.statNumber}>{sessionCount}</Text>
             <Text style={styles.statLabel}>Sessions</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => router.push('/(app)/calendar')}>
             <Text style={styles.statNumber}>{streak}</Text>
             <Text style={styles.statLabel}>Day streak</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Mood history */}
@@ -261,14 +256,6 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  backButton: {
-    marginBottom: Theme.spacing.md,
-  },
-  backText: {
-    fontSize: Theme.fontSize.md,
-    fontFamily: Theme.fontFamily.body,
-    color: Colors.accent.lavender,
-  },
   avatarOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
