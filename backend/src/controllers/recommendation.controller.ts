@@ -27,11 +27,11 @@ async function getRecommendation(req: any, res: any) {
             streamUrl,
         });
     } catch (err) {
-        console.error(err)
-        res.status(500).json({ error: 'internal error' })
+        console.error(err);
+        res.status(500).json({ error: 'internal error' });
     }
-};
+}
 
 module.exports = {
-    getRecommendation
+    getRecommendation,
 };
