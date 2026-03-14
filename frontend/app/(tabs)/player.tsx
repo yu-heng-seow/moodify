@@ -22,6 +22,7 @@ function formatMs(ms: number): string {
 }
 
 export default function PlayerScreen() {
+  console.log('PlayerScreen mounted'); 
   const { trackId } = useLocalSearchParams<{ trackId?: string }>();
   const { loadAndPlay, togglePlayPause, isPlaying, isLoading, position, duration, currentTrack } =
     useAudio();
@@ -31,7 +32,8 @@ export default function PlayerScreen() {
   const track = trackId ? getTrackById(trackId) : currentTrack ?? Tracks[0];
 
   useEffect(() => {
-    if (track && (!currentTrack || currentTrack.id !== track.id)) {
+    console.log('useEffect fired, track:', track?.title);
+    if (track) {
       loadAndPlay(track);
     }
   }, [track?.id]);
@@ -49,6 +51,15 @@ export default function PlayerScreen() {
       pulseAnim.setValue(1);
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    console.log('🎯 trackId param:', trackId);
+    console.log('🎵 resolved track:', track?.title);
+    console.log('🔄 currentTrack:', currentTrack?.title);
+    if (track && (!currentTrack || currentTrack.id !== track.id)) {
+      loadAndPlay(track);
+    }
+  }, [track?.id]);
 
   const progress = duration > 0 ? position / duration : 0;
 
@@ -150,7 +161,7 @@ export default function PlayerScreen() {
               end={{ x: 1, y: 1 }}
             >
               <Text style={styles.playIcon}>
-                {isLoading ? '⏳' : isPlaying ? '⏸' : '▶'}
+                {isLoading ? '⏳' : isPlaying ? '❙❙' : '▶'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

@@ -15,18 +15,21 @@ export interface Track {
   coverGradient: [string, string];
 }
 
+const S3 = 'https://moodify-tracks.s3.ap-southeast-2.amazonaws.com';
+
+
 export const Tracks: Track[] = [
   {
     id: '1',
     title: 'Still Waters',
     artist: 'Moodify Ambient',
-    duration: 480,
+    duration: 140931,
     emotions: ['anxious', 'overwhelmed', 'panic'],
     intensity: 'low',
     genre: 'nature',
     description: 'Gentle rain and distant thunder for nervous system reset',
     color: '#A78BFA',
-    audioUrl: 'https://www.soundjay.com/nature/sounds/rain-01.mp3',
+    audioUrl: `${S3}/distant-thunder-rain-ivo-vicic-1-02-20.mp3`,
     coverGradient: ['#A78BFA', '#1E1B4B'],
   },
   {
@@ -104,7 +107,7 @@ export const Tracks: Track[] = [
     genre: 'nature',
     description: 'Soft birdsong and stream for gentle awakening',
     color: '#6EE7B7',
-    audioUrl: 'https://www.soundjay.com/nature/sounds/birds-1.mp3',
+    audioUrl: `${S3}/forest-ambience-light-birdsong-distant-rooster-vincentmets-1-03-38.mp3`,
     coverGradient: ['#6EE7B7', '#065F46'],
   },
   {
@@ -112,12 +115,12 @@ export const Tracks: Track[] = [
     title: 'Hollow Moon',
     artist: 'Moodify Ambient',
     duration: 720,
-    emotions: ['grieving', 'lonely', 'sad'],
+    emotions: ['grieving', 'lonely', 'sad', 'calm'],
     intensity: 'medium',
     genre: 'ambient',
     description: 'Deep drones to hold grief without rushing it',
     color: '#93C5FD',
-    audioUrl: 'https://www.soundjay.com/misc/sounds/wind-chime-1.mp3',
+    audioUrl: `${S3}/wind-chimes-light-rain-thunder_aygGqqyO.mp3`,
     coverGradient: ['#93C5FD', '#0C1445'],
   },
 ];
