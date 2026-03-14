@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -16,7 +17,7 @@ import { GradientButton } from '@/components/ui/GradientButton';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
 import { Emotions, Emotion } from '@/constants/emotions';
-import { getTrackById } from '@/constants/tracks';
+import { getTrackById, Tracks } from '@/constants/tracks';
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -34,6 +35,9 @@ export default function DashboardScreen() {
   } | null>(null);
   const [loadingRec, setLoadingRec] = useState(false);
   const [audioPref, setAudioPref] = useState('ambient');
+  const [note, setNote] = useState('');
+  const [aiReply, setAiReply] = useState('');
+  const [loadingReply, setLoadingReply] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -48,10 +52,10 @@ export default function DashboardScreen() {
   const handleEmotionSelect = useCallback(async (emotion: Emotion) => {
     setSelectedEmotion(emotion);
     setRecommendation(null);
+    setAiReply('');
+    setNote('');
     setLoadingRec(true);
 
-    // TODO: replace with real Claude call when backend is ready
-    // const result = await getAIRecommendation({ ... });
     setTimeout(() => {
       const mockRecs: Record<string, { message: string; trackId: string }> = {
         anxious:     { message: `Breathe, ${name || 'friend'}. This soundscape was made for moments like this.`, trackId: '1' },
@@ -71,6 +75,39 @@ export default function DashboardScreen() {
     }, 1200);
   }, [name, audioPref]);
 
+  async function handleNoteSubmit() {
+    if (!note.trim() || !selectedEmotion) return;
+    setLoadingReply(true);
+    setAiReply('');
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [
+            {
+              role: 'user',
+              content: `You are a warm, empathetic companion in a healing audio app. 
+The user is feeling "${selectedEmotion.label}" and shared this note: "${note}"
+Respond with a short, genuinely supportive message (2-3 sentences max). 
+Be human, warm, and grounding. Do not suggest professional help. No lists, no headers.`,
+            },
+          ],
+        }),
+      });
+      const data = await response.json();
+      const text = data.content?.[0]?.text ?? '';
+      setAiReply(text);
+    } catch {
+      setAiReply('I hear you. Whatever you\'re carrying right now, you don\'t have to carry it alone.');
+    } finally {
+      setLoadingReply(false);
+    }
+  }
+
   function handleListenNow() {
     if (!recommendation) return;
     const track = getTrackById(recommendation.trackId);
@@ -84,10 +121,8 @@ export default function DashboardScreen() {
 
   return (
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>moodify</Text>
@@ -108,9 +143,7 @@ export default function DashboardScreen() {
         <View style={styles.orbContainer}>
           <MoodOrb
             color={selectedEmotion?.color ?? Colors.accent.lavender}
-            gradientColors={
-              selectedEmotion?.gradientColors ?? Colors.gradients.lavender
-            }
+            gradientColors={selectedEmotion?.gradientColors ?? Colors.gradients.lavender}
             size={160}
           />
           {selectedEmotion && (
@@ -162,6 +195,44 @@ export default function DashboardScreen() {
               <>
                 <Text style={styles.recEmoji}>✨</Text>
                 <Text style={styles.recMessage}>{recommendation.message}</Text>
+
+                {/* Notes input */}
+                <View style={styles.noteSection}>
+                  <Text style={styles.noteLabel}>What's behind this feeling?</Text>
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Tell me what's on your mind..."
+                    placeholderTextColor={Colors.text.muted}
+                    value={note}
+                    onChangeText={setNote}
+                    multiline
+                    numberOfLines={3}
+                  />
+                  <TouchableOpacity
+                    style={styles.noteBtn}
+                    activeOpacity={0.85}
+                    onPress={handleNoteSubmit}
+                    disabled={!note.trim() || loadingReply}
+                  >
+                    <Text style={styles.noteBtnText}>
+                      {loadingReply ? 'Thinking...' : 'Share with me →'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* AI reply */}
+                {loadingReply && (
+                  <View style={styles.replyLoading}>
+                    <ActivityIndicator color={Colors.accent.lavender} size="small" />
+                  </View>
+                )}
+                {aiReply ? (
+                  <View style={styles.aiReply}>
+                    <Text style={styles.aiReplyEmoji}>🤍</Text>
+                    <Text style={styles.aiReplyText}>{aiReply}</Text>
+                  </View>
+                ) : null}
+
                 <GradientButton
                   label="Listen Now"
                   onPress={handleListenNow}
@@ -204,6 +275,7 @@ export default function DashboardScreen() {
             <Text style={styles.quickLabel}>Now Playing</Text>
           </TouchableOpacity>
         </View>
+
       </ScrollView>
     </LinearGradient>
   );
@@ -273,7 +345,6 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.xl,
     justifyContent: 'center',
   },
-  
   emotionChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -313,7 +384,63 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: Theme.spacing.lg,
   },
-  recBtn: {},
+  noteSection: {
+    marginBottom: Theme.spacing.md,
+  },
+  noteLabel: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fontFamily.bodySemiBold,
+    color: Colors.text.secondary,
+    marginBottom: 8,
+  },
+  noteInput: {
+    backgroundColor: Colors.bg.elevated,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    padding: 12,
+    color: Colors.text.primary,
+    fontFamily: Theme.fontFamily.body,
+    fontSize: Theme.fontSize.sm,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  noteBtn: {
+    alignSelf: 'flex-end',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Colors.accent.lavender,
+  },
+  noteBtnText: {
+    color: Colors.accent.lavender,
+    fontFamily: Theme.fontFamily.bodySemiBold,
+    fontSize: Theme.fontSize.sm,
+  },
+  replyLoading: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  aiReply: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: Colors.bg.elevated,
+    borderRadius: Theme.radius.md,
+    padding: 12,
+    marginBottom: Theme.spacing.md,
+    alignItems: 'flex-start',
+  },
+  aiReplyEmoji: { fontSize: 16 },
+  aiReplyText: {
+    flex: 1,
+    color: Colors.text.primary,
+    fontFamily: Theme.fontFamily.body,
+    fontSize: Theme.fontSize.sm,
+    lineHeight: 20,
+  },
+  recBtn: { marginTop: Theme.spacing.sm },
   quickActions: {
     flexDirection: 'row',
     gap: 12,
@@ -336,4 +463,4 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
   },
-});
+}); 
