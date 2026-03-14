@@ -12,101 +12,65 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
-import { Tracks, Track } from '@/constants/tracks';
 import { Emotions } from '@/constants/emotions';
-
-const SUGGESTED = [
-  'help me sleep 🌙',
-  'release anger 🔥',
-  'morning calm ☀️',
-  'anxiety relief 🌀',
-  'grief support 🕊️',
-  'focus & clarity 🧠',
-  'feel less lonely 🌿',
-  'ground myself ✨',
-];
-
-function AddButton({ trackId }: { trackId: string }) {
-  const [added, setAdded] = useState(false);
-  return (
-    <TouchableOpacity
-      onPress={(e) => {
-        e.stopPropagation?.();
-        setAdded(true);
-      }}
-      style={[styles.addBtn, added && styles.addBtnDone]}
-      activeOpacity={0.8}
-      disabled={added}
-    >
-      <Text style={[styles.addBtnText, added && styles.addBtnTextDone]}>
-        {added ? '✓ Added' : '+ Library'}
-      </Text>
-    </TouchableOpacity>
-  );
-}
+import { getRecommendations, Song } from '@/lib/api';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [results, setResults] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
+  // Load all songs on mount
   useEffect(() => {
-    if (query === '') {
-      setSearched(false);
-      setResults([]);
-    }
-  }, [query]);
+    loadAllSongs();
+  }, []);
 
-  async function handleSearch(q?: string) {
-    const searchQuery = q ?? query;
-    if (!searchQuery.trim()) return;
-    if (q) setQuery(q);
+  async function loadAllSongs() {
     setLoading(true);
-    setSearched(true);
-
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [
-            {
-              role: 'user',
-              content: `You are a music recommendation engine for a healing audio app.
-              
-The user searched for: "${searchQuery}"
-
-Here are the available tracks:
-${Tracks.map(t => `- id: "${t.id}", title: "${t.title}", description: "${t.description}", emotions: [${t.emotions.join(', ')}]`).join('\n')}
-
-Return ONLY a JSON array of track IDs that best match the user's query, ordered by relevance. Example: ["id1", "id2"]. Return empty array [] if nothing matches. No other text.`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const text = data.content?.[0]?.text ?? '[]';
-      const ids: string[] = JSON.parse(text.replace(/```json|```/g, '').trim());
-      const matched = ids
-        .map((id) => Tracks.find((t) => t.id === id))
-        .filter(Boolean) as Track[];
-      setResults(matched);
-    } catch {
-      setResults([]);
+      const songs = await getRecommendations();
+      setAllSongs(songs);
+      setResults(songs);
+    } catch (err) {
+      console.error('Failed to load songs:', err);
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleSearch(q?: string) {
+    const searchQuery = q ?? query;
+    if (q) setQuery(q);
+
+    if (!searchQuery.trim()) {
+      setResults(allSongs);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const songs = await getRecommendations(searchQuery);
+      setResults(songs);
+    } catch {
+      setResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  useEffect(() => {
+    if (query === '') {
+      setResults(allSongs);
+    }
+  }, [query, allSongs]);
+
   return (
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
       <View style={styles.header}>
         <Text style={styles.title}>Discover</Text>
-        <Text style={styles.subtitle}>Describe how you feel or what you need</Text>
+        <Text style={styles.subtitle}>Search by tag or browse all tracks</Text>
       </View>
 
       {/* Search input */}
@@ -114,7 +78,7 @@ Return ONLY a JSON array of track IDs that best match the user's query, ordered 
         <Text style={styles.inputIcon}>🔍</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. calm my anxiety before sleep..."
+          placeholder="e.g. calm, focus, sleep..."
           placeholderTextColor={Colors.text.muted}
           value={query}
           onChangeText={setQuery}
@@ -127,7 +91,7 @@ Return ONLY a JSON array of track IDs that best match the user's query, ordered 
         style={styles.searchBtn}
         onPress={() => handleSearch()}
         activeOpacity={0.85}
-        disabled={loading}
+        disabled={searching}
       >
         <LinearGradient
           colors={Colors.gradients.lavender}
@@ -136,104 +100,80 @@ Return ONLY a JSON array of track IDs that best match the user's query, ordered 
           end={{ x: 1, y: 0 }}
         >
           <Text style={styles.searchBtnText}>
-            {loading ? 'Searching...' : 'Find soundscapes'}
+            {searching ? 'Searching...' : 'Find soundscapes'}
           </Text>
         </LinearGradient>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
 
-        {/* Pre-search content */}
-        {!searched && !loading && (
-          <>
-            <Text style={styles.sectionTitle}>Try asking for</Text>
-            <View style={styles.suggestedGrid}>
-              {SUGGESTED.map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  style={styles.suggestedChip}
-                  activeOpacity={0.75}
-                  onPress={() => handleSearch(s)}
-                >
-                  <Text style={styles.suggestedText}>{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>Browse by mood</Text>
-            <View style={styles.moodGrid}>
-              {Emotions.map((e) => (
-                <TouchableOpacity
-                  key={e.id}
-                  style={styles.moodCard}
-                  activeOpacity={0.75}
-                  onPress={() => handleSearch(e.label)}
-                >
-                  <LinearGradient
-                    colors={[e.color + '33', e.color + '11']}
-                    style={StyleSheet.absoluteFill}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
-                  <Text style={styles.moodEmoji}>{e.emoji}</Text>
-                  <Text style={styles.moodLabel}>{e.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
+        {/* Mood filter chips */}
+        {!searching && (
+          <View style={styles.moodGrid}>
+            {Emotions.map((e) => (
+              <TouchableOpacity
+                key={e.id}
+                style={styles.moodChip}
+                activeOpacity={0.75}
+                onPress={() => handleSearch(e.id)}
+              >
+                <Text style={styles.moodEmoji}>{e.emoji}</Text>
+                <Text style={styles.moodLabel}>{e.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
 
         {/* Loading */}
-        {loading && (
+        {(loading || searching) && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator color={Colors.accent.lavender} size="large" />
-            <Text style={styles.loadingText}>Finding your soundscape...</Text>
+            <Text style={styles.loadingText}>Loading tracks...</Text>
           </View>
         )}
 
         {/* No results */}
-        {!loading && searched && results.length === 0 && (
+        {!loading && !searching && results.length === 0 && (
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>🌫️</Text>
-            <Text style={styles.emptyText}>No matches found</Text>
-            <Text style={styles.emptyHint}>Try describing your mood differently</Text>
+            <Text style={styles.emptyText}>No tracks found</Text>
+            <Text style={styles.emptyHint}>Try a different tag</Text>
           </View>
         )}
 
         {/* Results */}
-        {!loading && results.map((track) => (
+        {!loading && !searching && results.map((song) => (
           <TouchableOpacity
-            key={track.id}
+            key={song.id}
             style={styles.resultCard}
             activeOpacity={0.8}
-            onPress={() => router.push({ pathname: '/(app)/(tabs)/player', params: { trackId: track.id } })}
+            onPress={() => router.push({
+              pathname: '/(app)/(tabs)/player',
+              params: {
+                trackId: song.id,
+                streamUrl: song.streamUrl,
+                title: song.title,
+                artist: song.artist,
+              },
+            })}
           >
             <LinearGradient
-              colors={track.coverGradient}
+              colors={Colors.gradients.lavender}
               style={styles.resultSwatch}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.resultEmoji}>
-                {track.genre === 'nature' ? '🌿' :
-                  track.genre === 'ambient' ? '🌌' :
-                  track.genre === 'binaural' ? '🧠' :
-                  track.genre === 'classical' ? '🎻' : '🧘'}
-              </Text>
+              <Text style={styles.resultEmoji}>🎵</Text>
             </LinearGradient>
             <View style={styles.resultInfo}>
-              <Text style={styles.resultTitle}>{track.title}</Text>
-              <Text style={styles.resultArtist}>{track.artist}</Text>
-              <Text style={styles.resultDesc} numberOfLines={1}>{track.description}</Text>
-              <View style={styles.resultBottom}>
-                <View style={styles.resultTags}>
-                  {track.emotions.slice(0, 2).map((e) => (
-                    <View key={e} style={styles.resultTag}>
-                      <Text style={styles.resultTagText}>{e}</Text>
-                    </View>
-                  ))}
-                </View>
-                <AddButton trackId={track.id} />
+              <Text style={styles.resultTitle}>{song.title}</Text>
+              <Text style={styles.resultArtist}>{song.artist}</Text>
+              <View style={styles.resultTags}>
+                {song.tags.slice(0, 3).map((tag) => (
+                  <View key={tag} style={styles.resultTag}>
+                    <Text style={styles.resultTagText}>{tag}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           </TouchableOpacity>
@@ -285,7 +225,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Theme.spacing.lg,
     borderRadius: Theme.radius.full,
     overflow: 'hidden',
-    marginBottom: Theme.spacing.lg,
+    marginBottom: Theme.spacing.md,
   },
   searchBtnGradient: {
     paddingVertical: 14,
@@ -300,57 +240,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg,
     paddingBottom: 100,
   },
-  sectionTitle: {
-    fontSize: Theme.fontSize.sm,
-    fontFamily: Theme.fontFamily.bodySemiBold,
-    color: Colors.text.secondary,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  suggestedGrid: {
+  moodGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: Theme.spacing.xl,
+    marginBottom: Theme.spacing.lg,
   },
-  suggestedChip: {
+  moodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: Theme.radius.full,
     backgroundColor: Colors.bg.card,
     borderWidth: 1,
     borderColor: Colors.border.subtle,
   },
-  suggestedText: {
-    fontSize: Theme.fontSize.sm,
+  moodEmoji: { fontSize: 14 },
+  moodLabel: {
+    fontSize: Theme.fontSize.xs,
     fontFamily: Theme.fontFamily.body,
     color: Colors.text.secondary,
-  },
-  moodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: Theme.spacing.xl,
-  },
-  moodCard: {
-    width: '47%',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Colors.bg.card,
-    borderWidth: 1,
-    borderColor: Colors.border.subtle,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  moodEmoji: { fontSize: 22 },
-  moodLabel: {
-    fontSize: Theme.fontSize.sm,
-    fontFamily: Theme.fontFamily.bodySemiBold,
-    color: Colors.text.primary,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -409,22 +320,11 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSize.xs,
     marginTop: 2,
   },
-  resultDesc: {
-    color: Colors.text.secondary,
-    fontFamily: Theme.fontFamily.body,
-    fontSize: Theme.fontSize.xs,
-    marginTop: 2,
-  },
-  resultBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
   resultTags: {
     flexDirection: 'row',
     gap: 6,
     flexWrap: 'wrap',
+    marginTop: 6,
   },
   resultTag: {
     paddingVertical: 3,
@@ -438,23 +338,5 @@ const styles = StyleSheet.create({
     color: Colors.text.muted,
     fontSize: 10,
     fontFamily: Theme.fontFamily.body,
-  },
-  addBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Colors.accent.lavender,
-  },
-  addBtnDone: {
-    borderColor: '#1DB954',
-  },
-  addBtnText: {
-    fontSize: 11,
-    fontFamily: Theme.fontFamily.bodySemiBold,
-    color: Colors.accent.lavender,
-  },
-  addBtnTextDone: {
-    color: '#1DB954',
   },
 });

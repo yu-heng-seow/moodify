@@ -15,7 +15,8 @@ interface EmotionParagraphRequest {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}&_vercel_share=${VERCEL_SHARE_SECRET}`, {
+  const separator = path.includes('?') ? '&' : '?';
+  const res = await fetch(`${BASE_URL}${path}${separator}_vercel_share=${VERCEL_SHARE_SECRET}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -37,9 +38,14 @@ export function getRecommendation(tag: string): Promise<Song> {
 }
 
 /** Get all songs matching a tag, or all songs if tag is omitted */
-export function getRecommendations(tag?: string): Promise<Song[]> {
-  const query = tag ? `?tag=${encodeURIComponent(tag)}` : '';
-  return request(`/api/recommends${query}`);
+export async function getRecommendations(tag?: string): Promise<Song[]> {
+  try {
+    const query = tag ? `?tag=${encodeURIComponent(tag)}` : '';
+    console.log(`Fetching recommendations with query: ${query}`);
+    return await request<Song[]>(`/api/recommends${query}`);
+  } catch (err) {
+    return [];
+  }
 }
 
 /** Generate an emotion-based paragraph via Claude */

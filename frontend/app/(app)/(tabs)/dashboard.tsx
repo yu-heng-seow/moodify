@@ -323,7 +323,7 @@ export default function DashboardScreen() {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push("/(app)/(tabs)/library")}
+            onPress={() => router.push("/(app)/(tabs)/search")}
             activeOpacity={0.8}
           >
             <LinearGradient
