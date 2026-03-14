@@ -39,48 +39,35 @@ export default function TabsLayout() {
         name="dashboard"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('@/assets/images/home.png')}
-              style={{ width: 24, height: 24, opacity: focused ? 1 : 0.5 }}
-            />
-          ),        
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('@/assets/images/home.png')}
-              style={{ width: 24, height: 24, opacity: focused ? 1 : 0.5 }}
-            />
-          ),        
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('@/assets/images/music.png')}
-              style={{ width: 24, height: 24, opacity: focused ? 1 : 0.5 }}
-            />
-          ),   
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🎶" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="player"
         options={{
           title: 'Player',
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('@/assets/images/headphone.png')}
-              style={{ width: 24, height: 24, opacity: focused ? 1 : 0.5 }}
-            />
-          ),        
+          tabBarIcon: ({ focused }) => <TabIcon emoji="💿" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
         }}
       />
     </Tabs>

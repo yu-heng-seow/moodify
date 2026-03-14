@@ -42,7 +42,7 @@ export const Tracks: Track[] = [
     genre: 'nature',
     description: 'Soft night sounds to sit with difficult feelings',
     color: '#93C5FD',
-    audioUrl: 'https://www.soundjay.com/nature/sounds/crickets-1.mp3',
+    audioUrl: `${S3}/cricket-ambience-on-mountain-meadow-ivo-vicic-1-02-00.mp3`,
     coverGradient: ['#93C5FD', '#1E3A5F'],
   },
   {
@@ -55,7 +55,7 @@ export const Tracks: Track[] = [
     genre: 'meditation',
     description: 'Grounding tones to release and soften tension',
     color: '#FDA4AF',
-    audioUrl: 'https://www.soundjay.com/nature/sounds/fire-1.mp3',
+    audioUrl: `${S3}/campfire-at-night-soundscape-louder-animals-quieter-campfire.mp3`,
     coverGradient: ['#FDA4AF', '#7F1D1D'],
   },
   {
@@ -68,7 +68,7 @@ export const Tracks: Track[] = [
     genre: 'classical',
     description: 'Warm, uplifting strings for moments of light',
     color: '#FCD34D',
-    audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3',
+    audioUrl: `${S3}/happy-background-music-orchestra-loop.mp3`,
     coverGradient: ['#FCD34D', '#92400E'],
   },
   {
@@ -79,9 +79,9 @@ export const Tracks: Track[] = [
     emotions: ['numb', 'anxious', 'sad'],
     intensity: 'low',
     genre: 'binaural',
-    description: '7Hz theta waves for deep emotional processing',
+    description: 'Binaural heta waves for deep emotional processing',
     color: '#6EE7B7',
-    audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3',
+    audioUrl: `${S3}/pulse-breath-with-bells_version-1.mp3`,
     coverGradient: ['#6EE7B7', '#064E3B'],
   },
   {
@@ -94,7 +94,7 @@ export const Tracks: Track[] = [
     genre: 'ambient',
     description: 'Immediate grounding for acute distress',
     color: '#C4B5FD',
-    audioUrl: 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3',
+    audioUrl: `${S3}/relaxing-ocean-wave.mp3`,
     coverGradient: ['#C4B5FD', '#2E1065'],
   },
   {
@@ -120,7 +120,7 @@ export const Tracks: Track[] = [
     genre: 'ambient',
     description: 'Deep drones to hold grief without rushing it',
     color: '#93C5FD',
-    audioUrl: `${S3}/wind-chimes-light-rain-thunder_aygGqqyO.mp3`,
+    audioUrl: `${S3}/morning-birds-and-windchimes.mp3`,
     coverGradient: ['#93C5FD', '#0C1445'],
   },
 ];
