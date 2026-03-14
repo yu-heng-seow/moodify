@@ -2,7 +2,7 @@ const { Client } = require('@elastic/elasticsearch');
 import { env } from '../config/env';
 
 const elasticClient = new Client({
-    node: env.elasticNode
+    node: env.elasticNode,
 });
 
 async function findSongsByTag(tag: string) {
@@ -14,7 +14,7 @@ async function findSongsByTag(tag: string) {
                 filter: [
                     {
                         term: {
-                            tags: tag.toLowerCase()
+                            tags: tag.toLowerCase(),
                         },
                     },
                 ],
