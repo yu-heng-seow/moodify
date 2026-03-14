@@ -14,25 +14,30 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
+          
       - name: Install dependencies
-        run: |
-          cd frontend
-          npm install
+        run: npm install
+
       - name: Run linter
-        run: |
-          cd frontend
-          npm run lint
+        run: npm run lint
         # If you haven't set up ESLint yet, see https://eslint.org/docs/latest/user-guide/getting-started
 
   security-scan:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -55,6 +60,9 @@ jobs:
     needs: ["lint","security-scan"]
     name: EAS Update
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     permissions:
       contents: read
       pull-requests: write
@@ -74,7 +82,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
@@ -83,11 +91,7 @@ jobs:
           token: ${{ secrets.EXPO_SECRET }}
 
       - name: Install dependencies
-        run: |
-          cd frontend
-          npm install
+        run: npm install
 
       - name: Create preview
-        run: |
-          cd frontend
-          eas update --auto --json --non-interactive
+        run: eas update --auto --json --non-interactive
