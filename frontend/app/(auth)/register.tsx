@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-// import { signUp } from '@/services/supabase';
 import { GradientButton } from '@/components/ui/GradientButton';
+import { useAuth } from '@/context/auth';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
 
@@ -22,6 +22,7 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { signUp } = useAuth();
 
   async function handleRegister() {
     if (!email || !password || !confirm) {
@@ -37,12 +38,13 @@ export default function RegisterScreen() {
       return;
     }
     setLoading(true);
-    // TODO: replace with real Supabase signUp when backend is ready
-    // const { error: err } = await signUp(email.trim(), password);
-    setTimeout(() => {
-      setLoading(false);
-      router.replace('/(onboarding)/step-one');
-    }, 800);
+    const { error: err } = await signUp(email.trim(), password);
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    // Stack.Protected auto-navigates on session change
   }
 
   return (

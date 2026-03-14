@@ -24,7 +24,7 @@ export default function LibraryScreen() {
 
   function handleTrackPress(track: Track) {
     router.push({
-      pathname: '/(tabs)/player',
+      pathname: '/(app)/(tabs)/player',
       params: { trackId: track.id },
     });
   }

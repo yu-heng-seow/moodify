@@ -11,8 +11,23 @@ import {
   Nunito_600SemiBold,
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
+import { AuthProvider, useAuth } from '@/context/auth';
 
 SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { user } = useAuth();
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Protected guard={!user}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -29,14 +44,9 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </>
+      <RootNavigator />
+    </AuthProvider>
   );
 }

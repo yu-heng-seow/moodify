@@ -36,7 +36,7 @@ export default function StepTwo() {
       return;
     }
     await AsyncStorage.setItem('moodify_context', JSON.stringify(selected));
-    router.push('/(onboarding)/step-three');
+    router.push('/(app)/(onboarding)/step-three');
   }
 
   return (

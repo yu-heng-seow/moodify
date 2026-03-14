@@ -1,105 +1,158 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Audio } from 'expo-av';
+import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { Audio as ExpoAudio } from 'expo-av';
 import { Track } from '@/constants/tracks';
 
-interface AudioState {
-  isPlaying: boolean;
-  isLoading: boolean;
-  duration: number;
-  position: number;
-  error: string | null;
-}
-
 export function useAudio() {
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const [sound, setSound] = useState<ExpoAudio.Sound | null>(null);
+  const [webAudio, setWebAudio] = useState<HTMLAudioElement | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [state, setState] = useState<AudioState>({
-    isPlaying: false,
-    isLoading: false,
-    duration: 0,
-    position: 0,
-    error: null,
-  });
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
 
+  // Mobile audio mode setup
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      staysActiveInBackground: true,
-      playsInSilentModeIOS: true,
-      shouldDuckAndroid: true,
-    });
-
-    return () => {
-      soundRef.current?.unloadAsync();
-    };
+    if (Platform.OS !== 'web') {
+      ExpoAudio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+      });
+    }
   }, []);
 
-  const loadAndPlay = useCallback(async (track: Track) => {
-    try {
-      setState((s) => ({ ...s, isLoading: true, error: null }));
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === 'web') {
+        webAudio?.pause();
+      } else {
+        sound?.unloadAsync();
+      }
+    };
+  }, [sound, webAudio]);
 
-      // Unload previous
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
+  const loadAndPlayWeb = useCallback(async (track: Track) => {
+    try {
+      setIsLoading(true);
+
+      // Stop and clean up previous
+      if (webAudio) {
+        webAudio.pause();
+        webAudio.src = '';
       }
 
-      const { sound } = await Audio.Sound.createAsync(
+      const audio = new window.Audio(track.audioUrl);
+
+      audio.addEventListener('loadedmetadata', () => {
+        setDuration(audio.duration * 1000);
+        setIsLoading(false);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        setPosition(audio.currentTime * 1000);
+      });
+
+      audio.addEventListener('playing', () => setIsPlaying(true));
+      audio.addEventListener('pause', () => setIsPlaying(false));
+      audio.addEventListener('ended', () => setIsPlaying(false));
+
+      audio.addEventListener('error', (e) => {
+        console.error('Web audio error:', e);
+        setIsLoading(false);
+      });
+
+      setWebAudio(audio);
+      setCurrentTrack(track);
+
+      // Web requires user gesture to play - attempt autoplay
+      try {
+        await audio.play();
+      } catch {
+        // Autoplay blocked - user will need to press play button
+        setIsLoading(false);
+      }
+
+    } catch (err: any) {
+      console.error('Web loadAndPlay error:', err.message ?? err);
+      setIsLoading(false);
+    }
+  }, [webAudio]);
+
+  const loadAndPlayMobile = useCallback(async (track: Track) => {
+    try {
+      setIsLoading(true);
+
+      if (sound) {
+        await sound.unloadAsync();
+        setSound(null);
+      }
+
+      const { sound: newSound } = await ExpoAudio.Sound.createAsync(
         { uri: track.audioUrl },
-        { shouldPlay: true },
+        {
+          shouldPlay: true,
+          progressUpdateIntervalMillis: 1000,
+        },
         (status) => {
           if (status.isLoaded) {
-            setState((s) => ({
-              ...s,
-              isPlaying: status.isPlaying,
-              duration: status.durationMillis ?? 0,
-              position: status.positionMillis ?? 0,
-              isLoading: false,
-            }));
+            setIsPlaying(status.isPlaying);
+            setPosition(status.positionMillis ?? 0);
+            setDuration(status.durationMillis ?? 0);
+            setIsLoading(false);
+          } else if (status.error) {
+            console.error('Mobile status error:', status.error);
+            setIsLoading(false);
           }
         }
       );
 
-      soundRef.current = sound;
+      setSound(newSound);
       setCurrentTrack(track);
-    } catch (err) {
-      console.error('Audio load error:', err);
-      setState((s) => ({
-        ...s,
-        isLoading: false,
-        error: 'Could not load audio',
-      }));
+
+    } catch (err: any) {
+      console.error('Mobile loadAndPlay error:', err.message ?? err);
+      setIsLoading(false);
     }
-  }, []);
+  }, [sound]);
+
+  const loadAndPlay = useCallback(async (track: Track) => {
+    if (Platform.OS === 'web') {
+      await loadAndPlayWeb(track);
+    } else {
+      await loadAndPlayMobile(track);
+    }
+  }, [loadAndPlayWeb, loadAndPlayMobile]);
 
   const togglePlayPause = useCallback(async () => {
-    if (!soundRef.current) return;
-    if (state.isPlaying) {
-      await soundRef.current.pauseAsync();
+    if (Platform.OS === 'web') {
+      if (!webAudio) return;
+      if (isPlaying) {
+        webAudio.pause();
+      } else {
+        await webAudio.play();
+      }
     } else {
-      await soundRef.current.playAsync();
+      if (!sound) return;
+      if (isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
     }
-  }, [state.isPlaying]);
-
-  const seek = useCallback(async (positionMillis: number) => {
-    await soundRef.current?.setPositionAsync(positionMillis);
-  }, []);
-
-  const stop = useCallback(async () => {
-    await soundRef.current?.stopAsync();
-    setCurrentTrack(null);
-  }, []);
+  }, [sound, webAudio, isPlaying]);
 
   return {
     currentTrack,
-    isPlaying: state.isPlaying,
-    isLoading: state.isLoading,
-    duration: state.duration,
-    position: state.position,
-    error: state.error,
+    isPlaying,
+    isLoading,
+    position,
+    duration,
+    error: null,
     loadAndPlay,
     togglePlayPause,
-    seek,
-    stop,
   };
 }
