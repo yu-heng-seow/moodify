@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StepIndicator } from '@/components/onboarding/StepIndicator';
 import { GradientButton } from '@/components/ui/GradientButton';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useAuth } from '@/context/auth';
 
 const AUDIO_PREFS = [
   { id: 'nature', label: 'Nature sounds', emoji: '🌿', desc: 'Rain, ocean, forest' },
@@ -23,6 +23,7 @@ export default function StepThree() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { scheduleDailyCheckIn } = useNotifications();
+  const { completeOnboarding } = useAuth();
 
   async function handleFinish() {
     if (!selected) {
@@ -31,15 +32,29 @@ export default function StepThree() {
     }
     setLoading(true);
 
-    await AsyncStorage.setItem('moodify_audio_pref', selected);
-
     if (notifEnabled) {
       await scheduleDailyCheckIn(20, 0); // 8 PM daily check-in
     }
 
-    await AsyncStorage.setItem('moodify_onboarded', 'true');
+    const [nameRaw, contextRaw] = await Promise.all([
+      AsyncStorage.getItem('moodify_name'),
+      AsyncStorage.getItem('moodify_context'),
+    ]);
+
+    const therapyGoals: string[] = contextRaw ? JSON.parse(contextRaw) : [];
+
+    const { error: err } = await completeOnboarding({
+      displayName: nameRaw ?? '',
+      preferredGenres: [selected],
+      therapyGoals,
+    });
+
     setLoading(false);
-    router.replace('/(app)/(tabs)/dashboard');
+
+    if (err) {
+      setError('Something went wrong. Please try again.');
+    }
+    // Stack.Protected auto-navigates when onboardingComplete becomes true
   }
 
   return (
@@ -57,7 +72,7 @@ export default function StepThree() {
           <Text style={styles.emoji}>🎵</Text>
           <Text style={styles.title}>How do you like{'\n'}to listen?</Text>
           <Text style={styles.subtitle}>
-            We'll use this to personalise every recommendation for you.
+            We&apos;ll use this to personalise every recommendation for you.
           </Text>
 
           <View style={styles.options}>

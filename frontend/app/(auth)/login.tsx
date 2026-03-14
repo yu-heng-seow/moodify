@@ -14,12 +14,14 @@ import { router } from 'expo-router';
 import { GradientButton } from '@/components/ui/GradientButton';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
+import { useAuth } from '@/context/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { signIn } = useAuth();
 
   async function handleLogin() {
     if (!email || !password) {
@@ -27,12 +29,13 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    // TODO: replace with real Supabase signIn when backend is ready
-    // const { error: err } = await signIn(email.trim(), password);
-    setTimeout(() => {
-      setLoading(false);
-      router.replace('/(onboarding)/step-one');
-    }, 800);
+    const { error: err } = await signIn(email.trim(), password);
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    // Stack.Protected auto-navigates on session change
   }
 
   return (
