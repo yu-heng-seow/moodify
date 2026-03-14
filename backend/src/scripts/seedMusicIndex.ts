@@ -17,10 +17,7 @@ interface SongDocument {
 }
 
 const client = new Client({
-    node: env.elasticNode,
-    auth: {
-        apiKey: env.elasticApiKey,
-    },
+    node: env.musicIndex,
 });
 
 const S3_MUSIC_BUCKET = 'moodify-tracks';
