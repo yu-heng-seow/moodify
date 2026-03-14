@@ -65,22 +65,24 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Check for EXPO_SECRET
+        env:
+          EXPO_SECRET: ${{ secrets.EXPO_SECRET }}
         run: |
-          if [ -z "${{ secrets.EXPO_SECRET }}" ]; then
+          if [ -z "$EXPO_SECRET" ]; then
             echo "You must provide an EXPO_SECRET secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
             exit 1
           fi
-
-      - name: Checkout repository
-        uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
