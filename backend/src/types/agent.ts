@@ -1,29 +1,29 @@
 export interface EmotionRequest {
-  emotion: string;
-  context?: string;
+    emotion: string;
+    context?: string;
 }
 
 export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+    role: 'system' | 'user' | 'assistant';
+    content: string;
 }
 
 export interface ElasticChatCompletionStreamRequest {
-  messages: ChatMessage[];
+    messages: ChatMessage[];
 }
 
 export interface ElasticStreamDelta {
-  content?: string;
+    content?: string;
 }
 
 export interface ElasticStreamChoice {
-  delta?: ElasticStreamDelta;
-  message?: {
-    content?: string;
-  };
+    delta?: ElasticStreamDelta;
+    message?: {
+        content?: string;
+    };
 }
 
 export interface ElasticStreamChunk {
-  choices?: ElasticStreamChoice[];
-  [key: string]: unknown;
+    choices?: ElasticStreamChoice[];
+    [key: string]: unknown;
 }

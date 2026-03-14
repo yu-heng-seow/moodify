@@ -18,6 +18,8 @@ export default [
                 __dirname: "readonly",
                 __filename: "readonly",
                 exports: "readonly",
+                fetch: "readonly",
+                TextDecoder: "readonly"
             },
         },
         plugins: {

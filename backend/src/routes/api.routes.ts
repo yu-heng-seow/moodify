@@ -1,5 +1,8 @@
 const express = require('express');
-const { getRecommendation, getRecommendations } = require('../controllers/recommendation.controller');
+const {
+    getRecommendation,
+    getRecommendations
+} = require('../controllers/recommendation.controller');
 const { generateEmotionParagraph } = require('../controllers/emotion.controller');
 
 const router = express.Router();

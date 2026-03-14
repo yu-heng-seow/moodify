@@ -1,11 +1,11 @@
 const { Client } = require('@elastic/elasticsearch');
 import { env } from '../config/env';
-import { buildSystemPrompt, buildUserPrompt } from "../prompt";
+import { buildSystemPrompt, buildUserPrompt } from '../prompt';
 import type {
     ElasticChatCompletionStreamRequest,
     ElasticStreamChunk,
-    EmotionRequest
-} from "../types/agent";
+    EmotionRequest,
+} from '../types/agent';
 import { SongDocument } from '../types/song';
 
 const elasticClient = new Client({
@@ -16,7 +16,8 @@ const elasticClient = new Client({
 });
 
 function getStreamEndpointUrl(): string {
-    return `${env.elasticNode}/_inference/chat_completion/${encodeURIComponent(env.elasticInferenceId)}/_stream`;
+    return `${env.elasticNode}/_inference/chat_completion/` + 
+    `${encodeURIComponent(env.elasticInferenceId)}/_stream`;
 }
 
 function parseSseDataLines(raw: string): string[] {
@@ -24,7 +25,7 @@ function parseSseDataLines(raw: string): string[] {
     const dataLines: string[] = [];
 
     for (const line of lines) {
-        if (line.startsWith("data:")) {
+        if (line.startsWith('data:')) {
             dataLines.push(line.slice(5).trim());
         }
     }
@@ -34,59 +35,55 @@ function parseSseDataLines(raw: string): string[] {
 
 function extractTextFromChunk(chunk: ElasticStreamChunk): string {
     const choice = chunk.choices?.[0];
-    if (!choice) return "";
+    if (!choice) return '';
 
-    if (typeof choice.delta?.content === "string") {
+    if (typeof choice.delta?.content === 'string') {
         return choice.delta.content;
     }
 
-    if (typeof choice.message?.content === "string") {
+    if (typeof choice.message?.content === 'string') {
         return choice.message.content;
     }
 
-    return "";
+    return '';
 }
 
-export async function getEmotionParagraph(
-    input: EmotionRequest
-): Promise<string> {
+export async function getEmotionParagraph(input: EmotionRequest): Promise<string> {
     const payload: ElasticChatCompletionStreamRequest = {
         messages: [
             {
-                role: "system",
-                content: buildSystemPrompt()
+                role: 'system',
+                content: buildSystemPrompt(),
             },
             {
-                role: "user",
-                content: buildUserPrompt(input)
+                role: 'user',
+                content: buildUserPrompt(input),
             }
-        ]
+        ],
     };
 
     const response = await fetch(getStreamEndpointUrl(), {
-        method: "POST",
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `ApiKey ${env.elasticApiKey}`
+            'Content-Type': 'application/json',
+            'Authorization': `ApiKey ${env.elasticApiKey}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-            `Elastic inference failed with status ${response.status}: ${errorText}`
-        );
+        throw new Error(`Elastic inference failed with status ${response.status}: ${errorText}`);
     }
 
     if (!response.body) {
-        throw new Error("Elastic returned no response body.");
+        throw new Error('Elastic returned no response body.');
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = "";
-    let output = "";
+    let buffer = '';
+    let output = '';
 
     while (true) {
         const { value, done } = await reader.read();
@@ -95,14 +92,14 @@ export async function getEmotionParagraph(
 
         buffer += decoder.decode(value, { stream: true });
 
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
+        const events = buffer.split('\n\n');
+        buffer = events.pop() ?? '';
 
         for (const event of events) {
             const dataLines = parseSseDataLines(event);
 
             for (const data of dataLines) {
-                if (!data || data === "[DONE]") {
+                if (!data || data === '[DONE]') {
                     continue;
                 }
 
@@ -120,7 +117,7 @@ export async function getEmotionParagraph(
         const dataLines = parseSseDataLines(buffer);
 
         for (const data of dataLines) {
-            if (!data || data === "[DONE]") continue;
+            if (!data || data === '[DONE]') continue;
 
             try {
                 const parsed = JSON.parse(data) as ElasticStreamChunk;
@@ -134,7 +131,7 @@ export async function getEmotionParagraph(
     const finalText = output.trim();
 
     if (!finalText) {
-        throw new Error("Elastic stream completed but no text was generated.");
+        throw new Error('Elastic stream completed but no text was generated.');
     }
 
     return finalText;
@@ -167,7 +164,7 @@ async function findAllSongs(): Promise<SongDocument[]> {
         size: 50,
         query: {
             match_all: {}
-        }
+        },
     });
 
     return result.hits.hits.map((hit: any) => hit._source as SongDocument);
