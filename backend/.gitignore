@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+
+# Environment files
+.env
+.env*.local
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.vshost.exe.config
+*.vshost.exe.manifest
+.vs
+.nyc_output
+.sass-cache
+install4j-work
+!/bin/*.js.map
+!/bin/*.css.map
