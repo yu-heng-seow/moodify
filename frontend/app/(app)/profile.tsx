@@ -156,8 +156,8 @@ export default function ProfileScreen() {
                 Linking.openSettings();
               }
             }},
-            { emoji: '🔒', label: 'Privacy', onPress: () => {} },
-            { emoji: '💬', label: 'Feedback', onPress: () => {} },
+            { emoji: '💬', label: 'Feedback', onPress: () => router.push('/feedback') },
+            { emoji: '🗓️', label: 'Progress', onPress: () => router.push('/progress') },
           ].map((item) => (
             <TouchableOpacity key={item.label} style={styles.settingsRow} onPress={item.onPress} activeOpacity={0.7}>
               <Text style={styles.settingsEmoji}>{item.emoji}</Text>

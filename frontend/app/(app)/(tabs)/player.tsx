@@ -32,13 +32,6 @@ export default function PlayerScreen() {
   const track = trackId ? getTrackById(trackId) : currentTrack ?? Tracks[0];
 
   useEffect(() => {
-    console.log('useEffect fired, track:', track?.title);
-    if (track) {
-      loadAndPlay(track);
-    }
-  }, [track?.id]);
-
-  useEffect(() => {
     if (isPlaying) {
       Animated.loop(
         Animated.sequence([
