@@ -271,7 +271,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
     marginBottom: Theme.spacing.xl,
+    justifyContent: 'center',
   },
+  
   emotionChip: {
     flexDirection: 'row',
     alignItems: 'center',

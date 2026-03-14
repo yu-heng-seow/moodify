@@ -119,7 +119,8 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     marginTop: 4,
   },
-  filterScroll: { maxHeight: 52 },
+  filterScroll: { 
+    height:52, flexShrink: 0,  },
   filterRow: {
     paddingHorizontal: Theme.spacing.lg,
     gap: 8,
