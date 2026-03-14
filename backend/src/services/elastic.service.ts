@@ -16,8 +16,10 @@ const elasticClient = new Client({
 });
 
 function getStreamEndpointUrl(): string {
-    return `${env.elasticNode}/_inference/chat_completion/` + 
-    `${encodeURIComponent(env.elasticInferenceId)}/_stream`;
+    return (
+        `${env.elasticNode}/_inference/chat_completion/` +
+        `${encodeURIComponent(env.elasticInferenceId)}/_stream`
+    );
 }
 
 function parseSseDataLines(raw: string): string[] {
@@ -58,7 +60,7 @@ export async function getEmotionParagraph(input: EmotionRequest): Promise<string
             {
                 role: 'user',
                 content: buildUserPrompt(input),
-            }
+            },
         ],
     };
 
@@ -66,7 +68,7 @@ export async function getEmotionParagraph(input: EmotionRequest): Promise<string
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `ApiKey ${env.elasticApiKey}`,
+            Authorization: `ApiKey ${env.elasticApiKey}`,
         },
         body: JSON.stringify(payload),
     });
@@ -163,7 +165,7 @@ async function findAllSongs(): Promise<SongDocument[]> {
         index: env.musicIndex,
         size: 50,
         query: {
-            match_all: {}
+            match_all: {},
         },
     });
 

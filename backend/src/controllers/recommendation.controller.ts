@@ -1,4 +1,4 @@
-import { SongDocument } from "../types/song";
+import { SongDocument } from '../types/song';
 
 const { findSongsByTag, findAllSongs } = require('../services/elastic.service');
 const { createSignedAudioUrl } = require('../services/s3.service');
@@ -38,7 +38,8 @@ export async function getRecommendations(req: any, res: any) {
     try {
         const tag = req.query.tag;
 
-        const songs = tag ? tag !== '' ? await findSongsByTag(tag) : await findAllSongs() : await findAllSongs();
+        const songs = tag ? tag !== '' ? await findSongsByTag(tag)
+            : await findAllSongs() : await findAllSongs();
 
         if (!songs.length) {
             return res.status(404).json({ error: 'No songs found' });
@@ -58,9 +59,8 @@ export async function getRecommendations(req: any, res: any) {
                     tags: song.tags,
                     streamUrl,
                 };
-            }),
+            })
         );
-
         res.json(results);
 
     } catch (err) {

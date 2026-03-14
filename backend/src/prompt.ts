@@ -20,7 +20,8 @@ export function buildSystemPrompt(): string {
         '- gratitude: reflective, heartfelt',
         '- anxiety: soothing, clear, supportive',
         '- confidence: assured, motivating, composed',
-        'If the emotion is unfamiliar, infer an appropriate tone and still write a suitable paragraph.'
+        'If the emotion is unfamiliar, infer an appropriate \
+        tone and still write a suitable paragraph.',
     ].join('\n');
 }
 
@@ -28,7 +29,7 @@ export function buildUserPrompt(input: EmotionRequest): string {
     const lines = [
         'Write exactly one paragraph using 50 words that complements this emotion.',
         '',
-        `emotion: ${input.emotion}`
+        `emotion: ${input.emotion}`,
     ];
 
     if (input.context?.trim()) {

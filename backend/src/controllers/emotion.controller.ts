@@ -22,7 +22,7 @@ export async function generateEmotionParagraph(req: any, res: any) {
 
         return res.status(502).json({
             error: 'Failed to generate paragraph',
-            message: error instanceof Error ? error.message : 'Unknown error'
+            message: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 }

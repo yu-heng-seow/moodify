@@ -1,7 +1,7 @@
 const express = require('express');
 const {
     getRecommendation,
-    getRecommendations
+    getRecommendations,
 } = require('../controllers/recommendation.controller');
 const { generateEmotionParagraph } = require('../controllers/emotion.controller');
 
