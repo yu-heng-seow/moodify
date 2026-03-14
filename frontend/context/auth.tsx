@@ -26,6 +26,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   completeOnboarding: (data: OnboardingData) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         completeOnboarding,
+        refreshProfile: async () => { if (session?.user) await loadProfile(session.user.id); },
       }}
     >
       {children}

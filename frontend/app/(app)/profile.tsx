@@ -1,48 +1,94 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/context/auth';
 import { Avatar } from '@/components/ui/Avatar';
+import { uploadImage, getSignedUrl } from '@/lib/media';
+import { supabase } from '@/lib/supabase';
+import { Emotions } from '@/constants/emotions';
 
 export default function ProfileScreen() {
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, refreshProfile } = useAuth();
   const [streak, setStreak] = useState(0);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [recentMoods, setRecentMoods] = useState<string[]>([]);
 
   useEffect(() => {
-    updateStreak();
+    if (user) fetchJournalStats();
   }, []);
 
-  async function updateStreak() {
-    const today = new Date().toDateString();
-    const lastOpen = await AsyncStorage.getItem('moodify_last_open');
-    const currentStreak = parseInt(await AsyncStorage.getItem('moodify_streak') ?? '0');
+  useEffect(() => {
+    if (profile?.avatarS3Key) {
+      getSignedUrl(profile.avatarS3Key, 3600).then(setAvatarUri);
+    }
+  }, [profile?.avatarS3Key]);
 
-    if (!lastOpen) {
-      await AsyncStorage.setItem('moodify_last_open', today);
-      await AsyncStorage.setItem('moodify_streak', '1');
-      setStreak(1);
-      return;
+  async function fetchJournalStats() {
+    if (!user) return;
+
+    // Total session count
+    const { count } = await supabase
+      .from('journal_entries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    setSessionCount(count ?? 0);
+
+    // Recent 5 moods
+    const { data } = await supabase
+      .from('journal_entries')
+      .select('emotion')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (data) {
+      const emojis = data.map((entry) => {
+        const emotion = Emotions.find((e) => e.id.toLowerCase() === entry.emotion.toLowerCase());
+        return emotion?.emoji ?? '🎵';
+      });
+      setRecentMoods(emojis);
     }
 
-    const last = new Date(lastOpen);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+    // Streak: count consecutive days with entries (including today)
+    const { data: entries } = await supabase
+      .from('journal_entries')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (entries && entries.length > 0) {
+      const uniqueDays = [...new Set(
+        entries.map((e) => new Date(e.created_at).toDateString())
+      )];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const firstDay = new Date(uniqueDays[0]);
+      firstDay.setHours(0, 0, 0, 0);
 
-    if (diffDays === 0) {
-      setStreak(currentStreak);
-    } else if (diffDays === 1) {
-      const newStreak = currentStreak + 1;
-      await AsyncStorage.setItem('moodify_streak', String(newStreak));
-      await AsyncStorage.setItem('moodify_last_open', today);
-      setStreak(newStreak);
-    } else {
-      await AsyncStorage.setItem('moodify_streak', '1');
-      await AsyncStorage.setItem('moodify_last_open', today);
-      setStreak(1);
+      // Streak only counts if the most recent entry is today or yesterday
+      const diffFromToday = Math.floor((today.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffFromToday > 1) {
+        setStreak(0);
+      } else {
+        let consecutive = 1;
+        for (let i = 1; i < uniqueDays.length; i++) {
+          const curr = new Date(uniqueDays[i - 1]);
+          const prev = new Date(uniqueDays[i]);
+          curr.setHours(0, 0, 0, 0);
+          prev.setHours(0, 0, 0, 0);
+          const diff = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+          if (diff === 1) {
+            consecutive++;
+          } else {
+            break;
+          }
+        }
+        setStreak(consecutive);
+      }
     }
   }
 
@@ -50,13 +96,54 @@ export default function ProfileScreen() {
     await signOut();
   }
 
+  async function pickImage() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled) return;
+
+    const uri = result.assets[0].uri;
+    setAvatarUri(uri);
+    setUploading(true);
+
+    try {
+      const path = await uploadImage(uri, `${user!.id}/avatar`);
+      await supabase.from('profiles').update({ avatar_s3_key: path }).eq('id', user!.id);
+      await refreshProfile();
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
+        {/* Back button */}
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={styles.backButton}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+
         {/* Avatar */}
         <View style={styles.avatarSection}>
-          <Avatar size={88} uri={profile?.avatarS3Key ?? null} />
+          <View>
+            <Avatar size={88} uri={avatarUri ?? profile?.avatarS3Key ?? null} onPress={pickImage} />
+            {uploading && (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color={Colors.text.primary} />
+              </View>
+            )}
+          </View>
+          <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+            <Text style={styles.editAvatarText}>Edit profile picture</Text>
+          </TouchableOpacity>
           <Text style={styles.name}>{profile?.displayName ?? 'Your name'}</Text>
           <Text style={styles.email}>{user?.email}</Text>
           <Text style={styles.joined}>Healing since March 2025</Text>
@@ -65,12 +152,8 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{sessionCount}</Text>
             <Text style={styles.statLabel}>Sessions</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Saved tracks</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{streak}</Text>
@@ -79,14 +162,18 @@ export default function ProfileScreen() {
         </View>
 
         {/* Mood history */}
+        {recentMoods.length > 0 && (
+          <>
         <Text style={styles.sectionTitle}>Recent moods</Text>
         <View style={styles.moodRow}>
-          {['😰', '🌧️', '🔥', '🌿', '✨'].map((emoji, i) => (
+          {recentMoods.map((emoji, i) => (
             <View key={i} style={styles.moodChip}>
               <Text style={styles.moodEmoji}>{emoji}</Text>
             </View>
           ))}
         </View>
+          </>
+        )}
 
         {/* Preferred Genres */}
         {profile?.preferredGenres && profile.preferredGenres.length > 0 && (
@@ -174,6 +261,28 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
+  backButton: {
+    marginBottom: Theme.spacing.md,
+  },
+  backText: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fontFamily.body,
+    color: Colors.accent.lavender,
+  },
+  avatarOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 44,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editAvatarText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fontFamily.body,
+    color: Colors.accent.lavender,
+    marginTop: 4,
+  },
   container: {
     paddingHorizontal: Theme.spacing.lg,
     paddingTop: 60,

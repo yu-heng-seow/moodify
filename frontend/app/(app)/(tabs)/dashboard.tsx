@@ -13,9 +13,11 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/auth";
+import { getSignedUrl } from "@/lib/media";
 import { MoodOrb } from "@/components/ui/MoodOrb";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
+import { supabase } from "@/lib/supabase";
 import { Colors } from "@/constants/colors";
 import { Theme } from "@/constants/theme";
 import { Emotions, Emotion } from "@/constants/emotions";
@@ -29,7 +31,7 @@ function getGreeting(): string {
 }
 
 export default function DashboardScreen() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [name, setName] = useState("");
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [recommendation, setRecommendation] = useState<{
@@ -41,6 +43,7 @@ export default function DashboardScreen() {
   const [note, setNote] = useState("");
   const [aiReply, setAiReply] = useState("");
   const [loadingReply, setLoadingReply] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -51,6 +54,12 @@ export default function DashboardScreen() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    if (profile?.avatarS3Key) {
+      getSignedUrl(profile.avatarS3Key, 3600).then(setAvatarUrl);
+    }
+  }, [profile?.avatarS3Key]);
 
   const handleEmotionSelect = useCallback(
     async (emotion: Emotion) => {
@@ -149,15 +158,29 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
     }
   }
 
-  function handleListenNow() {
-    if (!recommendation) return;
+  async function handleListenNow() {
+    if (!recommendation || !selectedEmotion || !user) return;
     const track = getTrackById(recommendation.trackId);
-    if (track) {
-      router.push({
-        pathname: "/(app)/(tabs)/player",
-        params: { trackId: track.id },
-      });
+    if (!track) return;
+
+    const { data, error } = await supabase.from('journal_entries').insert({
+      user_id: user.id,
+      emotion: selectedEmotion.id,
+      note: note.trim() || null,
+      recommended_track_id: track.id,
+    });
+
+    if (error) {
+      console.error("Error saving journal entry:", error);
+      return;
     }
+
+    console.log("Journal entry saved:", data);
+
+    router.push({
+      pathname: "/(app)/(tabs)/player",
+      params: { trackId: track.id },
+    });
   }
 
   return (
@@ -174,7 +197,7 @@ Be human, warm, and grounding. Do not suggest professional help. No lists, no he
           <Text style={styles.logo}>moodify</Text>
           <Avatar
             size={36}
-            uri={profile?.avatarS3Key ?? null}
+            uri={avatarUrl}
             onPress={() => router.push("/(app)/profile")}
           />
         </View>

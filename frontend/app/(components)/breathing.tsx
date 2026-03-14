@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
@@ -19,6 +20,7 @@ const PHASES = [
 ];
 
 export default function BreathingScreen() {
+  const insets = useSafeAreaInsets();
   const [running, setRunning] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [countdown, setCountdown] = useState(PHASES[0].duration / 1000);
@@ -74,7 +76,7 @@ export default function BreathingScreen() {
 
   return (
     <LinearGradient colors={['#0D0F1A', '#0F1628', '#0D0F1A']} style={styles.bg}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
 
         {/* Back */}
         <TouchableOpacity onPress={() => { setRunning(false); router.back(); }} style={styles.backBtn}>
@@ -139,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Theme.spacing.xl,
-    paddingTop: 20,
+    paddingTop: 0,
     paddingBottom: 48,
     alignItems: 'center',
   },
