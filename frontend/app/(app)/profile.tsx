@@ -10,15 +10,19 @@ import { useAuth } from '@/context/auth';
 import { Avatar } from '@/components/ui/Avatar';
 import { uploadImage, getSignedUrl } from '@/lib/media';
 import { supabase } from '@/lib/supabase';
+import { Emotions } from '@/constants/emotions';
 
 export default function ProfileScreen() {
   const { profile, user, signOut, refreshProfile } = useAuth();
   const [streak, setStreak] = useState(0);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [recentMoods, setRecentMoods] = useState<string[]>([]);
 
   useEffect(() => {
     updateStreak();
+    if (user) fetchJournalStats();
   }, []);
 
   useEffect(() => {
@@ -26,6 +30,32 @@ export default function ProfileScreen() {
       getSignedUrl(profile.avatarS3Key, 3600).then(setAvatarUri);
     }
   }, [profile?.avatarS3Key]);
+
+  async function fetchJournalStats() {
+    if (!user) return;
+
+    // Total session count
+    const { count } = await supabase
+      .from('journal_entries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    setSessionCount(count ?? 0);
+
+    // Recent 5 moods
+    const { data } = await supabase
+      .from('journal_entries')
+      .select('emotion')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (data) {
+      const emojis = data.map((entry) => {
+        const emotion = Emotions.find((e) => e.id === entry.emotion);
+        return emotion?.emoji ?? '🎵';
+      });
+      setRecentMoods(emojis);
+    }
+  }
 
   async function updateStreak() {
     const today = new Date().toDateString();
@@ -117,12 +147,8 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{sessionCount}</Text>
             <Text style={styles.statLabel}>Sessions</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Saved tracks</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{streak}</Text>
@@ -131,14 +157,18 @@ export default function ProfileScreen() {
         </View>
 
         {/* Mood history */}
+        {recentMoods.length > 0 && (
+          <>
         <Text style={styles.sectionTitle}>Recent moods</Text>
         <View style={styles.moodRow}>
-          {['😰', '🌧️', '🔥', '🌿', '✨'].map((emoji, i) => (
+          {recentMoods.map((emoji, i) => (
             <View key={i} style={styles.moodChip}>
               <Text style={styles.moodEmoji}>{emoji}</Text>
             </View>
           ))}
         </View>
+          </>
+        )}
 
         {/* Preferred Genres */}
         {profile?.preferredGenres && profile.preferredGenres.length > 0 && (
