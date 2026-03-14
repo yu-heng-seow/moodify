@@ -81,7 +81,6 @@ export default function DashboardScreen() {
           trackId: song.id,
         });
       } catch (err) {
-        console.error("Recommendation API error:", err);
         // Fallback to local tracks
         const fallbackTrack = Tracks.find((t) => t.emotions.includes(emotion.id)) ?? Tracks[0];
         setRecommendation({
