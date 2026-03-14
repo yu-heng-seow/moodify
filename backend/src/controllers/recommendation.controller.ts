@@ -42,8 +42,7 @@ export async function getRecommendations(req: any, res: any) {
             ? tag !== ''
                 ? await findSongsByTag(tag)
                 : await findAllSongs()
-            : await findAllSongs()
-            ;
+            : await findAllSongs();
 
         if (!songs.length) {
             return res.status(404).json({ error: 'No songs found' });
