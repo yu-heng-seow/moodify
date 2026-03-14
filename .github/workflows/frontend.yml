@@ -55,8 +55,12 @@ jobs:
         uses: github/codeql-action/analyze@v4
 
   update:
+    needs: ["lint","security-scan"]
     name: EAS Update
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     permissions:
       contents: read
       pull-requests: write
@@ -69,13 +73,14 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache: yarn
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
@@ -84,9 +89,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        run: yarn install
+        run: npm install
 
       - name: Create preview
-        uses: expo/expo-github-action/preview@v8
-        with:
-          command: eas update --auto
+        run: eas update --auto --json --non-interactive
