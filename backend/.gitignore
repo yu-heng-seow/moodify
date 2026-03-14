@@ -6,6 +6,8 @@ node_modules/
 # Testing
 /coverage
 
+elastic-agent-9.3.1-linux-x86_64/
+
 # Production
 /build
 /dist

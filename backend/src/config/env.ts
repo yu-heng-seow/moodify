@@ -10,4 +10,5 @@ export const env = {
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
     awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     musicIndex: process.env.MUSIC_INDEX || 'music_index',
+    elasticInferenceId: process.env.ELASTIC_INFERENCE_ID || '',
 };

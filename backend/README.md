@@ -16,5 +16,12 @@ MUSIC_INDEX=
 4. Test your features with Postman or CURL
 
 ## Current Working Endpoints
-*Note: Localhost in port `3000` unless specified otherwise
+***Note: Localhost in port `3000` unless specified otherwise**
 - `api/recommend?tag=<value>` - query songs that fit certain tag at random
+- `api/generate-emotion-paragraph` - given a fixed emotion input and an optional paragraph, asks AI agent to provide complementing messages for the emotion. JSON is as of below:
+```json
+{
+  "emotion": "hope",
+  "context": "I am rebuilding my life after a setback and want something encouraging without sounding dramatic."
+}
+```
