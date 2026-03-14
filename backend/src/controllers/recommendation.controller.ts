@@ -38,10 +38,11 @@ export async function getRecommendations(req: any, res: any) {
     try {
         const tag = req.query.tag;
 
-        const songs =
-            tag ? tag !== ''
+        const songs = tag
+                ? tag !== ''
                 ? await findSongsByTag(tag)
-                : await findAllSongs() : await findAllSongs()
+                : await findAllSongs()
+                : await findAllSongs()
             ;
 
         if (!songs.length) {
