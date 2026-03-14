@@ -25,7 +25,7 @@ export default function StepOne() {
       return;
     }
     await AsyncStorage.setItem('moodify_name', name.trim());
-    router.push('/(onboarding)/step-two');
+    router.push('/(app)/(onboarding)/step-two');
   }
 
   return (

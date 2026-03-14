@@ -22,7 +22,7 @@ export function MiniPlayer({ track, isPlaying, onPlayPause }: MiniPlayerProps) {
       />
       <TouchableOpacity
         style={styles.inner}
-        onPress={() => router.push('/(tabs)/player')}
+        onPress={() => router.push('/(app)/(tabs)/player')}
         activeOpacity={0.9}
       >
         {/* Track info */}

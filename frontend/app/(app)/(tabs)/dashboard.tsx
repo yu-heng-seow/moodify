@@ -10,6 +10,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Avatar } from '@/components/ui/Avatar';
+import { useAuth } from '@/context/auth';
 import { MoodOrb } from '@/components/ui/MoodOrb';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GradientButton } from '@/components/ui/GradientButton';
@@ -26,6 +28,7 @@ function getGreeting(): string {
 }
 
 export default function DashboardScreen() {
+  const { profile } = useAuth();
   const [name, setName] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [recommendation, setRecommendation] = useState<{
@@ -76,7 +79,7 @@ export default function DashboardScreen() {
     const track = getTrackById(recommendation.trackId);
     if (track) {
       router.push({
-        pathname: '/(tabs)/player',
+        pathname: '/(app)/(tabs)/player',
         params: { trackId: track.id },
       });
     }
@@ -91,9 +94,11 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>moodify</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/library')}>
-            <Text style={styles.headerIcon}>🎵</Text>
-          </TouchableOpacity>
+          <Avatar
+            size={36}
+            uri={profile?.avatarS3Key ?? null}
+            onPress={() => router.push('/(app)/profile')}
+          />
         </View>
 
         {/* Greeting */}
@@ -176,7 +181,7 @@ export default function DashboardScreen() {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push('/(tabs)/library')}
+            onPress={() => router.push('/(app)/(tabs)/library')}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -191,7 +196,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push('/(tabs)/player')}
+            onPress={() => router.push('/(app)/(tabs)/player')}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -228,7 +233,6 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     letterSpacing: 1,
   },
-  headerIcon: { fontSize: 22 },
   greetingBlock: { marginBottom: Theme.spacing.xl },
   greeting: {
     fontSize: Theme.fontSize.xxl,
