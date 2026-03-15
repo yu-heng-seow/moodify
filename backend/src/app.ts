@@ -4,6 +4,7 @@ import { env } from './config/env';
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 import path from 'path';
+const cors = require('cors');
 
 const app = express();
 
@@ -20,6 +21,13 @@ const swaggerOptions = {
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+app.use(
+    cors({
+        origin: ['https://moodz--byirnlyqhg.expo.app'],
+        credentials: true,
+    })
+);
 
 app.use(express.json());
 
