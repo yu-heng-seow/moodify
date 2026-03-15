@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAudio } from '@/hooks/use-audio';
 import { getTrackById, Tracks } from '@/constants/tracks';
@@ -23,19 +22,36 @@ function formatMs(ms: number): string {
 }
 
 export default function PlayerScreen() {
-  console.log('PlayerScreen mounted'); 
-  const { trackId } = useLocalSearchParams<{ trackId?: string }>();
+  const { trackId, streamUrl, title, artist } = useLocalSearchParams<{
+    trackId?: string;
+    streamUrl?: string;
+    title?: string;
+    artist?: string;
+  }>();
   const { loadAndPlay, togglePlayPause, isPlaying, isLoading, position, duration, currentTrack } =
     useAudio();
 
   const insets = useSafeAreaInsets();
   const [pulseAnim] = useState(new Animated.Value(1));
 
-  const track = trackId ? getTrackById(trackId) : currentTrack ?? Tracks[0];
+  // Resolve track: prefer local Track, fall back to API song params
+  const localTrack = trackId ? getTrackById(trackId) : null;
+  const track = localTrack ?? (streamUrl ? {
+    id: trackId ?? 'api-track',
+    title: title ?? 'Unknown Track',
+    artist: artist ?? 'Unknown Artist',
+    audioUrl: streamUrl,
+    duration: 0,
+    emotions: [] as any[],
+    intensity: 'low' as const,
+    genre: 'ambient' as const,
+    description: '',
+    color: Colors.accent.lavender,
+    coverGradient: Colors.gradients.lavender,
+  } : currentTrack ?? Tracks[0]);
 
   useEffect(() => {
-    console.log('useEffect fired, track:', track?.title);
-    if (track) {
+    if (track && (!currentTrack || currentTrack.id !== track.id)) {
       loadAndPlay(track);
     }
   }, [track?.id]);
@@ -54,15 +70,6 @@ export default function PlayerScreen() {
     }
   }, [isPlaying]);
 
-  useEffect(() => {
-    console.log('🎯 trackId param:', trackId);
-    console.log('🎵 resolved track:', track?.title);
-    console.log('🔄 currentTrack:', currentTrack?.title);
-    if (track && (!currentTrack || currentTrack.id !== track.id)) {
-      loadAndPlay(track);
-    }
-  }, [track?.id]);
-
   const progress = duration > 0 ? position / duration : 0;
 
   if (!track) {
@@ -71,8 +78,8 @@ export default function PlayerScreen() {
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>🎵</Text>
           <Text style={styles.emptyText}>No track selected</Text>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/library')}>
-            <Text style={styles.emptyLink}>Browse Library →</Text>
+          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')}>
+            <Text style={styles.emptyLink}>Discover Music →</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>

@@ -32,29 +32,34 @@ export default function StepThree() {
     }
     setLoading(true);
 
-    if (notifEnabled) {
-      await scheduleDailyCheckIn(20, 0); // 8 PM daily check-in
-    }
+    try {
+      if (notifEnabled) {
+        await scheduleDailyCheckIn(20, 0); // 8 PM daily check-in
+      }
 
-    const [nameRaw, contextRaw] = await Promise.all([
-      AsyncStorage.getItem('moodify_name'),
-      AsyncStorage.getItem('moodify_context'),
-    ]);
+      const [nameRaw, contextRaw] = await Promise.all([
+        AsyncStorage.getItem('moodify_name'),
+        AsyncStorage.getItem('moodify_context'),
+      ]);
 
-    const therapyGoals: string[] = contextRaw ? JSON.parse(contextRaw) : [];
+      const therapyGoals: string[] = contextRaw ? JSON.parse(contextRaw) : [];
 
-    const { error: err } = await completeOnboarding({
-      displayName: nameRaw ?? '',
-      preferredGenres: [selected],
-      therapyGoals,
-    });
+      const { error: err } = await completeOnboarding({
+        displayName: nameRaw ?? '',
+        preferredGenres: [selected],
+        therapyGoals,
+      });
 
-    setLoading(false);
-
-    if (err) {
+      if (err) {
+        setError('Something went wrong. Please try again.');
+      }
+      // Stack.Protected auto-navigates when onboardingComplete becomes true
+    } catch (err) {
+      console.error('Onboarding error:', err);
       setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    // Stack.Protected auto-navigates when onboardingComplete becomes true
   }
 
   return (

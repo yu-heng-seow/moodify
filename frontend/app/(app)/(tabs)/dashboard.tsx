@@ -21,7 +21,8 @@ import { supabase } from "@/lib/supabase";
 import { Colors } from "@/constants/colors";
 import { Theme } from "@/constants/theme";
 import { Emotions, Emotion } from "@/constants/emotions";
-import { getTrackById, Tracks } from "@/constants/tracks";
+import { Tracks } from "@/constants/tracks";
+import { getRecommendation, Song } from "@/lib/api";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -38,6 +39,7 @@ export default function DashboardScreen() {
     message: string;
     trackId: string;
   } | null>(null);
+  const [recommendedSong, setRecommendedSong] = useState<Song | null>(null);
   const [loadingRec, setLoadingRec] = useState(false);
   const [audioPref, setAudioPref] = useState("ambient");
   const [note, setNote] = useState("");
@@ -66,62 +68,30 @@ export default function DashboardScreen() {
     async (emotion: Emotion) => {
       setSelectedEmotion(emotion);
       setRecommendation(null);
+      setRecommendedSong(null);
       setAiReply("");
       setNote("");
       setLoadingRec(true);
 
-      setTimeout(() => {
-        const mockRecs: Record<string, { message: string; trackId: string }> = {
-          anxious: {
-            message: `Breathe, ${name || "friend"}. This soundscape was made for moments like this.`,
-            trackId: "1",
-          },
-          sad: {
-            message: `It's okay to feel this. Let this carry you gently.`,
-            trackId: "2",
-          },
-          angry: {
-            message: `Let the sound absorb what words can't hold right now.`,
-            trackId: "3",
-          },
-          happy: {
-            message: `Beautiful. Let's keep that warmth alive.`,
-            trackId: "4",
-          },
-          numb: {
-            message: `You don't have to feel anything right now. Just listen.`,
-            trackId: "5",
-          },
-          overwhelmed: {
-            message: `One breath at a time. This will help ground you.`,
-            trackId: "6",
-          },
-          lonely: {
-            message: `You're not alone in this moment. Let this be with you.`,
-            trackId: "7",
-          },
-          calm: {
-            message: `Stay in this feeling. This will help you hold it.`,
-            trackId: "4",
-          },
-          grieving: {
-            message: `Grief deserves space. This is yours.`,
-            trackId: "8",
-          },
-          panic: {
-            message: `You're safe. Focus on the sound. Breathe slowly.`,
-            trackId: "6",
-          },
-        };
-        const rec = mockRecs[emotion.id] ?? {
+      try {
+        const song = await getRecommendation(emotion.id);
+        setRecommendedSong(song);
+        setRecommendation({
+          message: `We found "${song.title}" by ${song.artist} for you.`,
+          trackId: song.id,
+        });
+      } catch (err) {
+        // Fallback to local tracks
+        const fallbackTrack = Tracks.find((t) => t.emotions.includes(emotion.id)) ?? Tracks[0];
+        setRecommendation({
           message: `Here's something for you right now.`,
-          trackId: "1",
-        };
-        setRecommendation(rec);
+          trackId: fallbackTrack.id,
+        });
+      } finally {
         setLoadingRec(false);
-      }, 1200);
+      }
     },
-    [name, audioPref],
+    [],
   );
 
 //   async function handleNoteSubmit() {
@@ -160,16 +130,13 @@ export default function DashboardScreen() {
 //   }
 
   async function handleListenNow() {
-
     if (!recommendation || !selectedEmotion || !user) return;
-    const track = getTrackById(recommendation.trackId);
-    if (!track) return;
 
     const { data, error } = await supabase.from('journal_entries').insert({
       user_id: user.id,
       emotion: selectedEmotion.id,
       note: note.trim() || null,
-      recommended_track_id: track.id,
+      recommended_track_id: recommendation.trackId,
     });
 
     if (error) {
@@ -177,12 +144,23 @@ export default function DashboardScreen() {
       return;
     }
 
-    console.log("Journal entry saved:", data);
-
-    router.push({
-      pathname: "/(app)/(tabs)/player",
-      params: { trackId: track.id },
-    });
+    // If we got a song from the API with a streamUrl, pass it along
+    if (recommendedSong?.streamUrl) {
+      router.push({
+        pathname: "/(app)/(tabs)/player",
+        params: {
+          trackId: recommendation.trackId,
+          streamUrl: recommendedSong.streamUrl,
+          title: recommendedSong.title,
+          artist: recommendedSong.artist,
+        },
+      });
+    } else {
+      router.push({
+        pathname: "/(app)/(tabs)/player",
+        params: { trackId: recommendation.trackId },
+      });
+    }
   }
 
   return (
@@ -344,7 +322,7 @@ export default function DashboardScreen() {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickCard}
-            onPress={() => router.push("/(app)/(tabs)/library")}
+            onPress={() => router.push("/(app)/(tabs)/search")}
             activeOpacity={0.8}
           >
             <LinearGradient
