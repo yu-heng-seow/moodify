@@ -39,7 +39,7 @@ export default function StepOne() {
 
           <View style={styles.content}>
             {/* Decorative glow */}
-            <View style={styles.glow} />
+            <View style={styles.glow} pointerEvents="none"/>
 
             <Text style={styles.emoji}>🌙</Text>
             <Text style={styles.title}>What shall we{'\n'}call you?</Text>

@@ -126,6 +126,15 @@ export default function ProfileScreen() {
     <LinearGradient colors={['#0D0F1A', '#11122A', '#0D0F1A']} style={styles.bg}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={styles.backBtn}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View>
@@ -229,8 +238,8 @@ export default function ProfileScreen() {
                 Linking.openSettings();
               }
             }},
-            { emoji: '🔒', label: 'Privacy', onPress: () => {} },
-            { emoji: '💬', label: 'Feedback', onPress: () => {} },
+            { emoji: '💬', label: 'Feedback', onPress: () => router.push('/feedback') },
+            { emoji: '🗓️', label: 'Progress', onPress: () => router.push('/progress') },
           ].map((item) => (
             <TouchableOpacity key={item.label} style={styles.settingsRow} onPress={item.onPress} activeOpacity={0.7}>
               <Text style={styles.settingsEmoji}>{item.emoji}</Text>
@@ -275,6 +284,32 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 100,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.xl,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.bg.card,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: Theme.fontSize.lg,
+    color: Colors.text.primary,
+  },
+  headerTitle: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fontFamily.display,
+    color: Colors.text.primary,
+  },
+  headerSpacer: { width: 40 },
   avatarSection: {
     alignItems: 'center',
     marginBottom: Theme.spacing.xl,

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  ScrollView,
   Modal,
   ScrollView,
 } from 'react-native';
@@ -103,6 +104,10 @@ export default function PlayerScreen() {
       />
 
       <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Back button */}
         {/* <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <BlurView intensity={15} tint="dark" style={styles.backBlur}>
@@ -227,7 +232,7 @@ export default function PlayerScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </LinearGradient>
   );
 }
@@ -244,9 +249,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: Theme.spacing.xl,
     justifyContent: 'center',
+    justifyContent: 'space-between',  
   },
   backBtn: {
     alignSelf: 'flex-start',

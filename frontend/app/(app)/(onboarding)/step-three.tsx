@@ -8,6 +8,8 @@ import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAuth } from '@/context/auth';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
 
 const AUDIO_PREFS = [
   { id: 'nature', label: 'Nature sounds', emoji: '🌿', desc: 'Rain, ocean, forest' },
@@ -24,6 +26,17 @@ export default function StepThree() {
   const [error, setError] = useState('');
   const { scheduleDailyCheckIn } = useNotifications();
   const { completeOnboarding } = useAuth();
+  const [notifTime, setNotifTime] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  
+  function formatTime(date: Date) {
+    const h = date.getHours();
+    const m = date.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 || 12;
+    const min = m.toString().padStart(2, '0');
+    return `${hour}:${min} ${ampm}`;
+  }
 
   async function handleFinish() {
     if (!selected) {
@@ -116,22 +129,77 @@ export default function StepThree() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          {/* Notification toggle — native only */}
-          {Platform.OS !== 'web' && (
+          {/* Notification toggle */}
+          <View style={[styles.notifCard, notifEnabled && styles.notifCardOn]}>
             <TouchableOpacity
               onPress={() => setNotifEnabled(!notifEnabled)}
-              style={[styles.notifCard, notifEnabled && styles.notifCardOn]}
               activeOpacity={0.8}
+              style={styles.notifInner}
             >
               <Text style={styles.notifEmoji}>🔔</Text>
               <View style={styles.notifText}>
                 <Text style={styles.notifTitle}>Daily check-in reminder</Text>
-                <Text style={styles.notifSub}>A gentle nudge at 8 PM each evening</Text>
+                <Text style={styles.notifSub}>A gentle nudge at {formatTime(notifTime)}</Text>
               </View>
               <View style={[styles.toggle, notifEnabled && styles.toggleOn]}>
                 <View style={[styles.toggleDot, notifEnabled && styles.toggleDotOn]} />
               </View>
             </TouchableOpacity>
+
+            {notifEnabled && (
+              <TouchableOpacity
+                onPress={() => setShowPicker(true)}
+                style={styles.changeTimeBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.changeTimeText}>✏️ Change time</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {showPicker && (
+            Platform.OS === 'web' ? (
+              <input
+                type="time"
+                style={{
+                  backgroundColor: Colors.bg.card,
+                  border: `1px solid ${Colors.border.subtle}`,
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  color: Colors.text.primary,
+                  fontSize: 16,
+                  width: '100%',
+                  marginTop: 10,
+                }}
+                value={`${String(notifTime.getHours()).padStart(2, '0')}:${String(notifTime.getMinutes()).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [h, m] = e.target.value.split(':').map(Number);
+                  const newTime = new Date();
+                  newTime.setHours(h, m, 0, 0);
+                  setNotifTime(newTime);
+                  setShowPicker(false);
+                }}
+              />
+            ) : (
+              <View>
+                <DateTimePicker
+                  value={notifTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    if (selectedTime) setNotifTime(selectedTime);
+                    // removed setShowPicker(false) from here
+                  }}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPicker(false)}
+                  style={styles.confirmTimeBtn}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.confirmTimeBtnText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            )
           )}
         </ScrollView>
 
@@ -155,6 +223,23 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: Theme.spacing.xl,
     paddingBottom: Theme.spacing.xl,
+  },
+  notifInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  changeTimeBtn: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.subtle,
+    alignItems: 'center',
+  },
+  changeTimeText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fontFamily.bodySemiBold,
+    color: Colors.accent.lavender,
   },
   glow: {
     position: 'absolute',
@@ -218,14 +303,11 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.md,
   },
   notifCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
     borderRadius: Theme.radius.lg,
     borderWidth: 1,
     borderColor: Colors.border.subtle,
     backgroundColor: Colors.bg.card,
-    gap: 12,
   },
   notifCardOn: { borderColor: Colors.accent.amber },
   notifEmoji: { fontSize: 22 },
