@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,12 +24,16 @@ function formatMs(ms: number): string {
 }
 
 export default function PlayerScreen() {
-  const { trackId, streamUrl, title, artist } = useLocalSearchParams<{
+  const { trackId, streamUrl, title, artist, message, tags: tagsParam } = useLocalSearchParams<{
     trackId?: string;
     streamUrl?: string;
     title?: string;
     artist?: string;
+    message?: string;
+    tags?: string;
   }>();
+  const parsedTags: string[] = tagsParam ? JSON.parse(tagsParam) : [];
+  const [showMessage, setShowMessage] = useState(false);
   const { loadAndPlay, togglePlayPause, isPlaying, isLoading, position, duration, currentTrack } =
     useAudio();
 
@@ -42,7 +48,7 @@ export default function PlayerScreen() {
     artist: artist ?? 'Unknown Artist',
     audioUrl: streamUrl,
     duration: 0,
-    emotions: [] as any[],
+    emotions: parsedTags as any[],
     intensity: 'low' as const,
     genre: 'ambient' as const,
     description: '',
@@ -138,6 +144,52 @@ export default function PlayerScreen() {
             </View>
           ))}
         </View>
+
+        {/* Show message button */}
+        {message ? (
+          <TouchableOpacity
+            style={styles.messageBtn}
+            activeOpacity={0.8}
+            onPress={() => setShowMessage(true)}
+          >
+            <Text style={styles.messageBtnEmoji}>💌</Text>
+            <Text style={styles.messageBtnText}>View your message</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {/* Message modal */}
+        <Modal
+          visible={showMessage}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowMessage(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowMessage(false)}
+          >
+            <View style={styles.modalCard}>
+              <LinearGradient
+                colors={['rgba(167,139,250,0.12)', 'rgba(167,139,250,0.03)']}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <Text style={styles.modalEmoji}>🤍</Text>
+              <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                <Text style={styles.modalText}>{message}</Text>
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.modalClose}
+                activeOpacity={0.8}
+                onPress={() => setShowMessage(false)}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Progress bar */}
         <View style={styles.progressContainer}>
@@ -235,7 +287,7 @@ const styles = StyleSheet.create({
   coverEmoji: { fontSize: 72 },
   info: {
     alignItems: 'center',
-    marginBottom: Theme.spacing.md,
+    marginBottom: Theme.spacing.xs,
   },
   trackTitle: {
     fontSize: Theme.fontSize.xxl,
@@ -275,6 +327,70 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: Theme.fontSize.xs,
     fontFamily: Theme.fontFamily.body,
+    color: Colors.text.secondary,
+  },
+  messageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: Theme.radius.full,
+    backgroundColor: Colors.bg.card,
+    borderWidth: 1,
+    borderColor: Colors.border.glow,
+    marginBottom: Theme.spacing.lg,
+  },
+  messageBtnEmoji: { fontSize: 16 },
+  messageBtnText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fontFamily.bodySemiBold,
+    color: Colors.accent.lavender,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Theme.spacing.xl,
+  },
+  modalCard: {
+    width: '100%',
+    maxHeight: '60%',
+    backgroundColor: Colors.bg.card,
+    borderRadius: Theme.radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border.glow,
+    padding: Theme.spacing.lg,
+    overflow: 'hidden',
+    alignItems: 'center',
+  },
+  modalEmoji: {
+    fontSize: 32,
+    marginBottom: Theme.spacing.md,
+  },
+  modalScroll: {
+    width: '100%',
+    marginBottom: Theme.spacing.md,
+  },
+  modalText: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fontFamily.body,
+    color: Colors.text.primary,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  modalClose: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+  },
+  modalCloseText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fontFamily.bodySemiBold,
     color: Colors.text.secondary,
   },
   progressContainer: {

@@ -154,6 +154,7 @@ export default function SearchScreen() {
                 streamUrl: song.streamUrl,
                 title: song.title,
                 artist: song.artist,
+                tags: JSON.stringify(song.tags),
               },
             })}
           >
