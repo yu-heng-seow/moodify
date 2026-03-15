@@ -58,6 +58,8 @@ app.get('/health', (req: any, res: any) => {
     res.json({ status: 'ok' });
 });
 
+export default app;
+
 app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
 });
