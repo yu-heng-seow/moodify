@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Theme } from '@/constants/theme';
-import { Emotions } from '@/constants/emotions';
+import { Emotions, EmotionTagMap, EmotionId } from '@/constants/emotions';
 import { getRecommendations, Song } from '@/lib/api';
 
 export default function SearchScreen() {
@@ -115,7 +115,11 @@ export default function SearchScreen() {
                 key={e.id}
                 style={styles.moodChip}
                 activeOpacity={0.75}
-                onPress={() => handleSearch(e.id)}
+                onPress={() => {
+                  const tags = EmotionTagMap[e.id as EmotionId];
+                  const tag = tags[Math.floor(Math.random() * tags.length)];
+                  handleSearch(tag);
+                }}
               >
                 <Text style={styles.moodEmoji}>{e.emoji}</Text>
                 <Text style={styles.moodLabel}>{e.label}</Text>
