@@ -48,7 +48,8 @@ const router = express.Router();
  *       properties:
  *         output:
  *           type: string
- *           example: "A warm wave of joy spread through the moment as the road opened into the golden evening."
+ *           example: "A warm wave of joy spread through the
+ *      moment as the road opened into the golden evening."
  *
  *     ErrorResponse:
  *       type: object
@@ -81,7 +82,8 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: Tag used to filter songs before selecting one random result.
+ *         description: Tag used to filter songs
+ *                  before selecting one random result.
  *         example: chill
  *     responses:
  *       200:
@@ -132,7 +134,8 @@ router.get('/recommend', getRecommendation);
  *         required: false
  *         schema:
  *           type: string
- *         description: Optional tag to filter songs. If omitted or empty, all songs are returned.
+ *         description: Optional tag to filter songs. 
+ *          If omitted or empty, all songs are returned.
  *         example: chill
  *     responses:
  *       200:
