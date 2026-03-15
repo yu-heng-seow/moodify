@@ -11,7 +11,7 @@ const app = express();
 const allowedOriginRegex = /^https:\/\/moodz--[a-z0-9]+\.expo\.app$/;
 
 const swaggerOptions = {
-    swaggerDefinition: {
+    definition: {
         openapi: '3.0.0',
         info: {
             title: 'My Express.js API',
@@ -22,7 +22,6 @@ const swaggerOptions = {
     apis: [path.join(__dirname, './routes/*.ts'), path.join(__dirname, './controllers/*.ts')],
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use(
     cors({
@@ -49,9 +48,14 @@ app.use('/api', apiRoutes);
 app.get('/', (_req: any, res: any) => {
     res.json({
         message: 'API is running',
-        docs: '/api-docs',
+        docs: '/swagger/',
         health: '/health',
     });
+});
+
+app.get('/api-docs.json', (_req: any, res:any) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocs);
 });
 
 app.get('/health', (req: any, res: any) => {
