@@ -20,12 +20,12 @@ const swaggerOptions = {
     },
   },
   apis: [
-    path.join(process.cwd(), 'src/routes/**/*.{ts,js}'),
-    path.join(process.cwd(), 'src/controllers/**/*.{ts,js}'),
-    path.join(process.cwd(), 'src/api/**/*.{ts,js}'),
-    path.join(process.cwd(), 'dist/routes/**/*.js'),
-    path.join(process.cwd(), 'dist/controllers/**/*.js'),
-    path.join(process.cwd(), 'dist/api/**/*.js'),
+    path.join(process.cwd(), './src/routes/*.ts'),
+    path.join(process.cwd(), './src/controllers/*.ts'),
+    path.join(process.cwd(), './src/api/*.ts'),
+    path.join(process.cwd(), './dist/routes/*.js'),
+    path.join(process.cwd(), './dist/controllers/*.js'),
+    path.join(process.cwd(), './dist/api/*.js'),
   ],
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
