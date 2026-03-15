@@ -9,22 +9,6 @@ const app = express();
 
 const allowedOriginRegex = /^https:\/\/moodz--[a-z0-9]+\.expo\.app$/;
 
-const swaggerOptions: swaggerJsdoc.Options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'My Express.js API',
-      version: '1.0.0',
-      description: 'A sample Express.js API built with TypeScript and Swagger',
-    },
-  },
-  apis: [
-    path.join(process.cwd(), 'src/**/*.ts'),
-    path.join(process.cwd(), 'dist/**/*.js'),
-  ],
-};
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
 app.use(
     cors({
         origin: (origin: any, callback: any) => {
@@ -55,11 +39,8 @@ app.get('/', (_req: any, res: any) => {
     });
 });
 
-app.use('/swagger', express.static(path.join(process.cwd(), 'public/swagger')));
-
-app.get('/api-docs.json', (_req: any, res:any) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerDocs);
+app.get('/api-docs.json', (_req: any, res: any) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'openapi.json'));
 });
 
 app.get('/health', (req: any, res: any) => {
