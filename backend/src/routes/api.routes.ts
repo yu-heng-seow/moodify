@@ -134,7 +134,7 @@ router.get('/recommend', getRecommendation);
  *         required: false
  *         schema:
  *           type: string
- *         description: Optional tag to filter songs. 
+ *         description: Optional tag to filter songs. \
  *          If omitted or empty, all songs are returned.
  *         example: chill
  *     responses:
