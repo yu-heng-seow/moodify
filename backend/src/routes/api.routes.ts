@@ -48,8 +48,7 @@ const router = express.Router();
  *       properties:
  *         output:
  *           type: string
- *           example: "A warm wave of joy spread through the
- *      moment as the road opened into the golden evening."
+ *           example: "A warm wave of joy spread through the moment as the road opened into the golden evening."
  *
  *     ErrorResponse:
  *       type: object

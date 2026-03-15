@@ -11,15 +11,22 @@ const app = express();
 const allowedOriginRegex = /^https:\/\/moodz--[a-z0-9]+\.expo\.app$/;
 
 const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'My Express.js API',
-            version: '1.0.0',
-            description: 'A sample Express.js API built with TypeScript and Swagger',
-        },
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'My Express.js API',
+      version: '1.0.0',
+      description: 'A sample Express.js API built with TypeScript and Swagger',
     },
-    apis: [path.join(__dirname, './routes/*.ts'), path.join(__dirname, './controllers/*.ts')],
+  },
+  apis: [
+    path.join(process.cwd(), 'src/routes/**/*.{ts,js}'),
+    path.join(process.cwd(), 'src/controllers/**/*.{ts,js}'),
+    path.join(process.cwd(), 'src/api/**/*.{ts,js}'),
+    path.join(process.cwd(), 'dist/routes/**/*.js'),
+    path.join(process.cwd(), 'dist/controllers/**/*.js'),
+    path.join(process.cwd(), 'dist/api/**/*.js'),
+  ],
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
@@ -52,6 +59,8 @@ app.get('/', (_req: any, res: any) => {
         health: '/health',
     });
 });
+
+app.use('/swagger', express.static(path.join(process.cwd(), 'public/swagger')));
 
 app.get('/api-docs.json', (_req: any, res:any) => {
   res.setHeader('Content-Type', 'application/json');
