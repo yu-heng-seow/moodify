@@ -22,12 +22,14 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-app.use(cors({
-    origin: [
-        'https://moodz--byirnlyqhg.expo.app',   // Expo web
-    ],
-    credentials: true,
-}));
+app.use(
+    cors({
+        origin: [
+            'https://moodz--byirnlyqhg.expo.app',
+        ],
+        credentials: true,
+    })
+);
 
 app.use(express.json());
 
