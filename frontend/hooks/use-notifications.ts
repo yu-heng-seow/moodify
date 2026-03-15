@@ -15,15 +15,15 @@ Notifications.setNotificationHandler({
 
 const CHECK_IN_MESSAGES = [
   { title: 'Hey, how are you feeling?', body: 'Take a moment to check in with yourself 🌙' },
-  { title: 'A gentle nudge 🌿', body: 'Your emotions are valid. Moodify is here when you need it.' },
+  { title: 'A gentle nudge 🌿', body: 'Your emotions are valid. Moodz is here when you need it.' },
   { title: 'Time for a breather?', body: 'Even 2 minutes of calm can shift your whole day.' },
-  { title: 'How\'s your heart today?', body: 'Open Moodify and let the music meet you where you are.' },
+  { title: 'How\'s your heart today?', body: 'Open Moodz and let the music meet you where you are.' },
 ];
 
 export function useNotifications() {
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  const notificationListener = useRef<Notifications.EventSubscription>(null);
+  const responseListener = useRef<Notifications.EventSubscription>(null);
 
   useEffect(() => {
     registerForPushNotifications();
@@ -53,8 +53,8 @@ export function useNotifications() {
     setPermissionGranted(true);
 
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('moodify', {
-        name: 'Moodify Check-ins',
+      await Notifications.setNotificationChannelAsync('moodz', {
+        name: 'Moodz Check-ins',
         importance: Notifications.AndroidImportance.DEFAULT,
         sound: 'default',
       });

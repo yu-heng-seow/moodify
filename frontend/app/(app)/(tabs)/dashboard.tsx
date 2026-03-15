@@ -193,7 +193,7 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>moodify</Text>
+          <Text style={styles.logo}>moodz</Text>
           <Avatar
             size={36}
             uri={avatarUrl}

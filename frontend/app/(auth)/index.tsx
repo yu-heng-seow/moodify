@@ -15,7 +15,7 @@ export default function AuthWelcomeScreen() {
       <View style={styles.container}>
         {/* Logo */}
         <View style={styles.logoSection}>
-          <Text style={styles.logo}>moodify</Text>
+          <Text style={styles.logo}>moodz</Text>
           <Text style={styles.tagline}>your emotional sanctuary</Text>
         </View>
 
@@ -32,7 +32,7 @@ export default function AuthWelcomeScreen() {
         <View style={styles.descSection}>
           <Text style={styles.descTitle}>Music that feels like you</Text>
           <Text style={styles.descBody}>
-            Journal your emotions and let Moodify find the perfect therapeutic soundscape for your state of mind.
+            Journal your emotions and let Moodz find the perfect therapeutic soundscape for your state of mind.
           </Text>
         </View>
 

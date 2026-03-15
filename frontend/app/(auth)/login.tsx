@@ -47,7 +47,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>moodify</Text>
+            <Text style={styles.logo}>moodz</Text>
             <Text style={styles.tagline}>your emotional sanctuary</Text>
           </View>
 
