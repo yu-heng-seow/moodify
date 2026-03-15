@@ -1,8 +1,7 @@
 const express = require('express');
 const apiRoutes = require('./routes/api.routes');
 import { env } from './config/env';
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
+import swaggerJsdoc, {Options} from 'swagger-jsdoc';
 import path from 'path';
 const cors = require('cors');
 
@@ -10,7 +9,7 @@ const app = express();
 
 const allowedOriginRegex = /^https:\/\/moodz--[a-z0-9]+\.expo\.app$/;
 
-const swaggerOptions = {
+const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
