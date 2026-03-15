@@ -24,9 +24,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use(
     cors({
-        origin: [
-            'https://moodz--byirnlyqhg.expo.app',
-        ],
+        origin: ['https://moodz--byirnlyqhg.expo.app'],
         credentials: true,
     })
 );
