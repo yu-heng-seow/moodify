@@ -1,3 +1,17 @@
+/** Maps each emotion to music tags for therapeutic recommendation (opposites, not mirrors) */
+export const EmotionTagMap: Record<EmotionId, string[]> = {
+  anxious:      ['calm', 'soothing', 'rain', 'waves', 'relax'],
+  sad:          ['happy', 'orchestra', 'driving', 'acoustic'],
+  angry:        ['calm', 'soothing', 'relax', 'waves', 'quiet'],
+  happy:        ['happy', 'orchestra', 'driving', 'retro'],
+  numb:         ['driving', 'retro', 'synthwave', 'bells'],
+  overwhelmed:  ['quiet', 'peace', 'silence', 'calm', 'rain'],
+  lonely:       ['acoustic', 'fire', 'forest', 'chill', 'lofi'],
+  calm:         ['calm', 'peace', 'quiet', 'acoustic', 'rain'],
+  grieving:     ['soothing', 'waves', 'relax', 'acoustic', 'forest'],
+  panic:        ['calm', 'soothing', 'bells', 'peace', 'silence'],
+};
+
 export type EmotionId =
   | 'anxious'
   | 'sad'

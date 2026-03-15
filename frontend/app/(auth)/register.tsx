@@ -55,7 +55,7 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={styles.logo}>moodify</Text>
+            <Text style={styles.logo}>moodz</Text>
             <Text style={styles.tagline}>your emotional sanctuary</Text>
           </View>
 

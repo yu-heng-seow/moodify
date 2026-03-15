@@ -20,9 +20,9 @@ import { GradientButton } from "@/components/ui/GradientButton";
 import { supabase } from "@/lib/supabase";
 import { Colors } from "@/constants/colors";
 import { Theme } from "@/constants/theme";
-import { Emotions, Emotion } from "@/constants/emotions";
+import { Emotions, Emotion, EmotionTagMap } from "@/constants/emotions";
 import { Tracks } from "@/constants/tracks";
-import { getRecommendation, Song } from "@/lib/api";
+import { getRecommendation, generateEmotionParagraph, Song } from "@/lib/api";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -44,6 +44,7 @@ export default function DashboardScreen() {
   const [audioPref, setAudioPref] = useState("ambient");
   const [note, setNote] = useState("");
   const [isTooLong, setIsTooLong] = useState(false);
+  const [generatingMsg, setGeneratingMsg] = useState(false);
   const [aiReply, setAiReply] = useState("");
   const [loadingReply, setLoadingReply] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -74,7 +75,9 @@ export default function DashboardScreen() {
       setLoadingRec(true);
 
       try {
-        const song = await getRecommendation(emotion.id);
+        const tags = EmotionTagMap[emotion.id];
+        const tag = tags[Math.floor(Math.random() * tags.length)];
+        const song = await getRecommendation(tag);
         setRecommendedSong(song);
         setRecommendation({
           message: `We found "${song.title}" by ${song.artist} for you.`,
@@ -131,8 +134,9 @@ export default function DashboardScreen() {
 
   async function handleListenNow() {
     if (!recommendation || !selectedEmotion || !user) return;
+    setGeneratingMsg(true);
 
-    const { data, error } = await supabase.from('journal_entries').insert({
+    const { error } = await supabase.from('journal_entries').insert({
       user_id: user.id,
       emotion: selectedEmotion.id,
       note: note.trim() || null,
@@ -141,26 +145,41 @@ export default function DashboardScreen() {
 
     if (error) {
       console.error("Error saving journal entry:", error);
+      setGeneratingMsg(false);
       return;
     }
 
-    // If we got a song from the API with a streamUrl, pass it along
-    if (recommendedSong?.streamUrl) {
-      router.push({
-        pathname: "/(app)/(tabs)/player",
-        params: {
-          trackId: recommendation.trackId,
-          streamUrl: recommendedSong.streamUrl,
-          title: recommendedSong.title,
-          artist: recommendedSong.artist,
-        },
-      });
-    } else {
-      router.push({
-        pathname: "/(app)/(tabs)/player",
-        params: { trackId: recommendation.trackId },
-      });
+    // Generate emotion paragraph if user wrote a note
+    let emotionMessage = '';
+    if (note.trim()) {
+      try {
+        const { output } = await generateEmotionParagraph(selectedEmotion.id, note.trim());
+        emotionMessage = output;
+      } catch (err) {
+        console.error("Failed to generate emotion paragraph:", err);
+      }
     }
+
+    const params: Record<string, string> = {
+      trackId: recommendation.trackId,
+    };
+    if (recommendedSong?.streamUrl) {
+      params.streamUrl = recommendedSong.streamUrl;
+      params.title = recommendedSong.title;
+      params.artist = recommendedSong.artist;
+      if (recommendedSong.tags.length > 0) {
+        params.tags = JSON.stringify(recommendedSong.tags);
+      }
+    }
+    if (emotionMessage) {
+      params.message = emotionMessage;
+    }
+
+    setGeneratingMsg(false);
+    router.push({
+      pathname: "/(app)/(tabs)/player",
+      params,
+    });
   }
 
   return (
@@ -174,7 +193,7 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>moodify</Text>
+          <Text style={styles.logo}>moodz</Text>
           <Avatar
             size={36}
             uri={avatarUrl}
@@ -308,8 +327,9 @@ export default function DashboardScreen() {
                   </Text>
                 )}
                 <GradientButton
-                disabled={isTooLong}
-                  label="Listen Now"
+                  disabled={isTooLong || generatingMsg}
+                  label={generatingMsg ? "Writing you a little something..." : "Listen Now"}
+                  loading={generatingMsg}
                   onPress={handleListenNow}
                   style={styles.recBtn}
                 />

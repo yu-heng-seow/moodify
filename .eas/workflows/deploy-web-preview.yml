@@ -1,0 +1,12 @@
+name: Deploy web preview
+
+on:
+  pull_request:
+    branches: ['main']
+
+jobs:
+  deploy_preview:
+    name: Deploy web preview
+    type: deploy
+    params:
+      prod: false
