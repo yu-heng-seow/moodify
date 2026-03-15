@@ -8,6 +8,8 @@ const cors = require('cors');
 
 const app = express();
 
+const allowedOriginRegex = /^https:\/\/moodz--[a-z0-9]+\.expo\.app$/;
+
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
@@ -24,7 +26,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use(
     cors({
-        origin: ['https://moodz--byirnlyqhg.expo.app'],
+        origin: (origin: any, callback: any) => {
+            // allow non-browser requests or tools like curl/postman
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOriginRegex.test(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error(`Not allowed by CORS: ${origin}`));
+        },
         credentials: true,
     })
 );
